@@ -29,9 +29,10 @@
 
 (define (insertCoin column player matrix)
   (cond
-    [(= column 0) (cons (insertCoin_aux (car matrix) player) (cdr matrix))]
-    [else (cons (car matrix) (append (insertCoin (- column 1) player (cdr matrix))))]))
+    [(= column 1) (cons (insertCoin_aux (car matrix) player) (cdr matrix)]
+    [else (cons (car matrix) (list (insertCoin (- column 1) player (cdr matrix))))]))
 
+(trace insertCoin)
 
 (define (insertCoin_aux selectedRow player)
   (cond
@@ -39,13 +40,10 @@
     [(not(zero? (cadr selectedRow))) (append (list player) (cdr selectedRow))]
     [else (cons (car selectedRow) (insertCoin_aux (cdr selectedRow) player))]))
 
+(trace insertCoin_aux)
 
-(insertCoin 5 1
-            (insertCoin 7 2
-            (insertCoin 4 1
-            (insertCoin 7 2
-            (insertCoin 7 1
-            (insertCoin 1 2 (4line 8 8)))))))
+
+
 
 
 
