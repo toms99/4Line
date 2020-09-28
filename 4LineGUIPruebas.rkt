@@ -1,6 +1,8 @@
 #lang racket
 ;; #lang racket/gui
 (require racket/gui/base)
+(require racket/include)
+(require "4Line-LogicTest.rkt")
 
 
 ;; --------------- MainWindow ---------------
@@ -79,9 +81,8 @@
 ;; Creates all the holeButtons inside board.
 ;; param: number of columns and rows.
 (define (createBoardButtons columns rows)
- 
   ;; Creates the gui matrix and the logic matrix.
-  (createBoardButtonsRows rows columns 1 (createBoardMatrix rows columns '())))
+  (createBoardButtonsRows rows columns 1 (4line rows columns)))
 
 ;; Create the gui matrix.
 ;; Display all the needed buttons.
@@ -164,6 +165,25 @@
 (set! x (cons 0 (car x)))
 
 ;; --------------- Executing the program ---------------
+;; --------------- Building the main ---------------
+(define (main)
+  ; Show the frame by calling its show method
+  (send frame show #t))
 
-; Show the frame by calling its show method
-(send frame show #t)
+(define (mainAux logicMatrix playerOn  )
+  (cond ((checkWinner logicMatrix)
+         (print "Player" playerOn))
+  (else
+         "bye")))
+
+;; --------------- Testing the program -----------------
+
+(main)
+
+
+
+
+
+
+
+
