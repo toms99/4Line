@@ -68,6 +68,7 @@
                          (send gameFrame show #f)
                          )])
 
+
 ;; Creates the panel that manages all the holeButtons
 (define boardPanel
   (new vertical-pane%	 
@@ -88,22 +89,22 @@
 ;; Display all the needed buttons.
 (define (createBoardButtonsRows rows columns cont logicMatrix)
   (cond ((> cont rows)
-         "Done Creating the board")
+         (set! buttonsMatrix (list buttonsMatrix logicMatrix)))
    (else
          (set! buttonsMatrix (cons
-                              (createBoardButtonsColumns cont columns (createHorizontalStandardPane) 1 '() rows columns logicMatrix)
+                              (createBoardButtonsColumns cont columns (createHorizontalStandardPane) 1 '() rows columns)
                               buttonsMatrix))
          (createBoardButtonsRows rows columns (+ cont 1) logicMatrix))))
 
 ;; Auxiliary function for createBoardButtonsRows
 ;; Sets the buttons in the columns.
-(define (createBoardButtonsColumns row columns parent cont list totalRows totalColumns logicMatrix)
+(define (createBoardButtonsColumns row columns parent cont list totalRows totalColumns)
   (cond ((> cont columns)
          list)
   (else
         (createBoardButtonsColumns row columns parent (+ cont 1)
-                                   (createHoleButton parent row cont list totalRows totalColumns logicMatrix)
-                                   totalRows totalColumns logicMatrix))))
+                                   (createHoleButton parent row cont list totalRows totalColumns #t)
+                                   totalRows totalColumns))))
 
 
 ;; creates vertical Pane inside boardPanel
@@ -112,16 +113,19 @@
        [parent boardPanel]	 	 	 
        [alignment '(center center)]))
 
+
+
 ;; Creates an individual holeButton
 ;; param: parent object, number columns.
-(define (createHoleButton parent rows column list totalRows totalColumns logicMatrix)
+(define (createHoleButton parent rows column list totalRows totalColumns enabled?)
         (cons (new button%
              [label "X"]
              [parent parent]
              [callback (lambda (button event)
-                         (setChoseHole rows column totalRows totalColumns logicMatrix))]
+                         (setChoseHole rows column totalRows totalColumns))]
              [min-width 45]	 
-   	     [min-height 45]) list))
+   	     [min-height 45]
+             [enabled enabled?]) list))
 
 ;; Create a matrix for the gameBoard
 ;; The form of this matrix is:
@@ -140,12 +144,15 @@
 
 
 ;; When the user chooses a button
-(define (setChoseHole row column totalRows totalColumns logicMatrix)
+(define (setChoseHole row column totalRows totalColumns)
   (send msg set-label (~a row
                           "x"
                           column))
- (send (matrixGet (- totalRows row ) (- totalColumns column ) 0 buttonsMatrix) set-label "O")
- (send (matrixGet (- totalRows row ) (- totalColumns column ) 0 buttonsMatrix) enable #f))
+ (send (matrixGet (- totalRows row ) (- totalColumns column ) 0 (car buttonsMatrix)) enable #f)
+ (send (matrixGet (- totalRows row ) (- totalColumns column ) 0 (car buttonsMatrix)) set-label "O")
+ (set! buttonsMatrix (list (car buttonsMatrix)
+                           (insertCoin column 1 (cadr buttonsMatrix))))
+ (checkWinner (cadr buttonsMatrix)))
 
 ;; Gets the button we want in the matrix.
 (define (matrixGet row column cont list)
@@ -164,17 +171,18 @@
 (define x (createBoardMatrix 10 10 '()))
 (set! x (cons 0 (car x)))
 
-;; --------------- Executing the program ---------------
+
 ;; --------------- Building the main ---------------
 (define (main)
   ; Show the frame by calling its show method
   (send frame show #t))
 
-(define (mainAux logicMatrix playerOn  )
+(define (mainAux logicMatrix playerOn)
   (cond ((checkWinner logicMatrix)
          (print "Player" playerOn))
-  (else
-         "bye")))
+        ((= playerOn 1)
+         (mainAux logicMatrix))
+         ))
 
 ;; --------------- Testing the program -----------------
 

@@ -37,6 +37,7 @@
     [(not(zero? (cadr selectedRow))) (append (list player) (cdr selectedRow))]
     [else (cons (car selectedRow) (insertCoin_aux (cdr selectedRow) player))]))
 
+
 ;; ---------------- Funcion verificar ganador ------------
 
 ;; Checks if someone is a winner.
@@ -143,12 +144,41 @@
    (else
          (checkDiagonalsAux matrix (+ row 1) (+ column coeficient) 0 0 coeficient))))
 
+;; Checks if someone is close to win.
+;; Returns '(playerCloseToWin rowWhereItCanWin)
+(define (checkHorizontales matrix)
+  (checkHorizontalesAux matrix 1 1 0 0))
+
+(define (checkHorizontalesAux matrix row column pointsP1 pointsP2)
+  (cond ((and (= pointsP1 3) (= 0 (getByIndexRow matrix row column 1)))
+         (list 1 row))
+        ((and (= pointsP2 3) (= 0 (getByIndexRow matrix row column 1)))
+         (list 2 row))
+        ((> column (length (car matrix)))
+         '(0 0))
+        ((> row (length matrix))
+         (checkHorizontalesAux matrix 1 (+ column 1) 0 0))
+        ((= 1 (getByIndexRow matrix row column 1))
+         (checkHorizontalesAux matrix (+ row 1) column (+ pointsP1 1) 0))
+        ((= 2 (getByIndexRow matrix row column 1))
+         (checkHorizontalesAux matrix (+ row 1) column 0 (+ pointsP2 1)))
+   (else
+         (checkHorizontalesAux matrix (+ row 1) column 0 0))))
+
+
 ;;  ---------- Exporting all -----------
 
 (provide (all-defined-out))
 
+(define x '((0 1 0 0 0)
+            (0 1 2 0 0)
+            (0 1 2 0 0)
+            (0 0 2 0 0)
+            (0 0 0 0 0)
+            (0 0 0 0 0)))
 
-
+(checkHorizontales x)
+(checkColumns x)
 
 
 
