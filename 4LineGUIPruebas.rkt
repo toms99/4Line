@@ -106,6 +106,21 @@
                                    (createHoleButton parent row cont list totalRows totalColumns #t)
                                    totalRows totalColumns))))
 
+;; Disables/enables all the board buttons.
+(define (enableButtons enable?)
+  (enableButtonsRows (car buttonsMatrix) enable?))
+
+(define (enableButtonsRows buttonsList enable?)
+  (cond ((null? buttonsList))
+  (else
+   (enableButtonsColumns (car buttonsList) enable?)
+   (enableButtonsRows (cdr buttonsList) enable?))))
+
+(define (enableButtonsColumns buttonsList enable?)
+  (cond ((null? buttonsList))
+  (else
+   (send (car buttonsList) enable enable?)
+   (enableButtonsColumns (cdr buttonsList) enable?))))
 
 ;; creates vertical Pane inside boardPanel
 (define (createHorizontalStandardPane)
@@ -148,11 +163,10 @@
   (send msg set-label (~a row
                           "x"
                           column))
- (send (matrixGet (- totalRows (insertCoinRow column 1 (cadr buttonsMatrix))) (- totalColumns column ) 0 (car buttonsMatrix)) enable #f)
  (send (matrixGet (- totalRows (insertCoinRow column 1 (cadr buttonsMatrix))) (- totalColumns column ) 0 (car buttonsMatrix)) set-label "O")
  (set! buttonsMatrix (list (car buttonsMatrix)
                            (insertCoin (- column 1) 1 (cadr buttonsMatrix))))
- (checkWinner (cadr buttonsMatrix)))
+ (mainAux 2))
 
 ;; Gets the button we want in the matrix.
 (define (matrixGet row column cont list)
@@ -177,12 +191,13 @@
   ; Show the frame by calling its show method
   (send frame show #t))
 
-(define (mainAux logicMatrix playerOn)
-  (cond ((checkWinner logicMatrix)
-         (print "Player" playerOn))
+(define (mainAux playerOn)
+  (cond ((not (= 0 (checkWinner (cadr buttonsMatrix))))
+         (checkWinner (cadr buttonsMatrix)))
         ((= playerOn 1)
-         (mainAux logicMatrix))
-         ))
+         (enableButtons #t))
+        ((= playerOn 2)
+         (enableButtons #f))))
 
 ;; --------------- Testing the program -----------------
 
