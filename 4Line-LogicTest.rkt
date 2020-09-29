@@ -144,7 +144,35 @@
    (else
          (checkDiagonalsAux matrix (+ row 1) (+ column coeficient) 0 0 coeficient))))
 
-;; Checks if someone is close to win.
+;; Checks if someone is close to win by Columns.
+;; Returns '(playerCloseToWin rowWhereItCanWin)
+;; Checks if someone win by 4 in a row.
+(define (checkVerticales matrix)
+  (checkVerticalesAux2 matrix '(0 0)))
+
+(define (checkVerticalesAux2 matrix result)
+  (cond ((or (= 1 (car result)) (= 2 (car result)))
+         result)
+        ((null? matrix)
+         result)
+  (else
+         (checkVerticalesAux2 (cdr matrix) (checkVerticalesAux (car matrix) 0 0 1)))))
+
+(define (checkVerticalesAux lista pointsP1 pointsP2 cont)
+  (cond ((and (= pointsP1 3) (equal? 0 (car lista))) 
+         (list 1 cont))
+        ((and (= pointsP2 3) (equal? 0 (car lista)))
+         (list 2 cont))
+        ((null? lista)
+         '(0 0))     
+        ((equal? 1 (car lista))
+         (checkVerticalesAux (cdr lista) (+ 1 pointsP1) 0 (+ cont 1)))
+        ((equal? 2 (car lista))
+         (checkVerticalesAux (cdr lista) 0 (+ 1 pointsP2) (+ cont 1)))
+  (else
+        (checkVerticalesAux (cdr lista) 0 0 (+ cont 1)))))
+
+;; Checks if someone is close to win by Rows.
 ;; Returns '(playerCloseToWin rowWhereItCanWin)
 (define (checkHorizontales matrix)
   (checkHorizontalesAux matrix 1 1 0 0))
@@ -170,15 +198,15 @@
 
 (provide (all-defined-out))
 
-(define x '((0 1 0 0 0)
+(define x '((0 0 0 0 0)
             (0 1 2 0 0)
             (0 1 2 0 0)
-            (0 0 2 0 0)
+            (1 1 1 0 0)
             (0 0 0 0 0)
             (0 0 0 0 0)))
 
-(checkHorizontales x)
-(checkColumns x)
+(checkVerticales x )
+
 
 
 
