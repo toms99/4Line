@@ -148,10 +148,10 @@
   (send msg set-label (~a row
                           "x"
                           column))
- (send (matrixGet (- totalRows row ) (- totalColumns column ) 0 (car buttonsMatrix)) enable #f)
- (send (matrixGet (- totalRows row ) (- totalColumns column ) 0 (car buttonsMatrix)) set-label "O")
+ (send (matrixGet (- totalRows (insertCoinRow column 1 (cadr buttonsMatrix))) (- totalColumns column ) 0 (car buttonsMatrix)) enable #f)
+ (send (matrixGet (- totalRows (insertCoinRow column 1 (cadr buttonsMatrix))) (- totalColumns column ) 0 (car buttonsMatrix)) set-label "O")
  (set! buttonsMatrix (list (car buttonsMatrix)
-                           (insertCoin column 1 (cadr buttonsMatrix))))
+                           (insertCoin (- column 1) 1 (cadr buttonsMatrix))))
  (checkWinner (cadr buttonsMatrix)))
 
 ;; Gets the button we want in the matrix.

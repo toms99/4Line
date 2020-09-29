@@ -24,7 +24,6 @@
 
 
 ;; Select a column to insert the coin
-
 (define (insertCoin column player matrix)
   (cond
     [(= column 0) (cons (insertCoin_aux (car matrix) player) (cdr matrix))]
@@ -37,6 +36,18 @@
     [(not(zero? (cadr selectedRow))) (append (list player) (cdr selectedRow))]
     [else (cons (car selectedRow) (insertCoin_aux (cdr selectedRow) player))]))
 
+;; Returns the row of the coin inserted
+(define (insertCoinRow column player matrix)
+  (cond
+    [(= column 1) (insertCoinRow_aux (car matrix) 1 player) ]
+    [else (insertCoinRow (- column 1) player (cdr matrix))]))
+
+
+(define (insertCoinRow_aux selectedColumn row player)
+  (cond
+    [(null? (cdr selectedColumn)) row]
+    [(not(zero? (cadr selectedColumn))) row]
+    [else (insertCoinRow_aux (cdr selectedColumn) (+ row 1) player)]))
 
 ;; ---------------- Funcion verificar ganador ------------
 
@@ -112,9 +123,9 @@
   (selectDiagonalsToCheck matrix 1 1 1))
 
 (define (selectDiagonalsToCheck matrix row column cont)
-  (cond ((>= row (length matrix))
+  (cond ((> row (length matrix))
          "Done")
-        ((>= column (length (car matrix)))
+        ((> column (length (car matrix)))
          (checkDiagonalsAux matrix row column 0 0 -1)
          (checkDiagonalsAux matrix row 1 0 0 1)
          (selectDiagonalsToCheck matrix (+ row 1) column (+ cont 1)))
@@ -127,12 +138,12 @@
 ;; It checks the right and left diagonal of a specific matrix index.
 ;; Coeficient indicates if it has to check right (1) diagonal or left (-1) diagonal.
 (define (checkDiagonalsAux matrix row column pointsP1 pointsP2 coeficient)
-  (cond ((or (< row 1) (< column 1))
-         #f)
-        ((= pointsP1 4)
+  (cond ((= pointsP1 4)
          (print "Player 1 by diagonal"))
         ((= pointsP2 4)
          (print "Player 2 by diagonal"))
+        ((or (< row 1) (< column 1))
+         #f)
         ((> column (length (car matrix)))
          #f)
         ((> row (length matrix))
@@ -194,18 +205,57 @@
          (checkHorizontalesAux matrix (+ row 1) column 0 0))))
 
 
+;; Checks if someone is close to win by Diagonals.
+;; Returns '(playerCloseToWin rowWhereItCanWin)
+
+(define (checkDiagonales matrix)
+  (selectDiagonalesToCheck matrix 1 1 1 '(0 0)))
+
+(define (selectDiagonalesToCheck matrix row column cont result)
+  (cond ((or (< 0 (car result)) (> row (length matrix)))
+         result)
+        ((> column (length (car matrix)))
+         (selectDiagonalesToCheck matrix (+ row 1) column (+ cont 1)
+                                  (checkDiagonalesAux matrix row column 0 0 -1 result))
+         (selectDiagonalesToCheck matrix (+ row 1) column (+ cont 1)
+                                  (checkDiagonalesAux matrix row 1 0 0 1 result)))
+  (else
+         (selectDiagonalesToCheck matrix row (+ column 1) (+ cont 1)
+                                  (checkDiagonalesAux matrix row column 0 0 1 result))
+         (selectDiagonalesToCheck matrix row (+ column 1) (+ cont 1)
+                                  (checkDiagonalesAux matrix row column 0 0 -1 result)))))
+
+;; Auxiliary function for checkDiagonal.
+;; It checks the right and left diagonal of a specific matrix index.
+;; Coeficient indicates if it has to check right (1) diagonal or left (-1) diagonal.
+(define (checkDiagonalesAux matrix row column pointsP1 pointsP2 coeficient result)
+  (cond ((and (= pointsP1 3) (= 0 (getByIndexRow matrix row column 1)))
+         (list 1 column row))
+        ((and (= pointsP2 3) (= 0 (getByIndexRow matrix row column 1)))
+         (list 2 column row))
+        ((or (< row 1) (< column 1))
+         '(0 0))
+        ((or (> column (length (car matrix))) (> row (length matrix)))
+         '(0 0))
+        ((= 1 (getByIndexRow matrix row column 1))
+         (checkDiagonalesAux matrix (+ row 1) (+ column coeficient) (+ pointsP1 1) 0 coeficient result))
+        ((= 2 (getByIndexRow matrix row column 1))
+         (checkDiagonalesAux matrix (+ row 1) (+ column coeficient) 0 (+ pointsP2 1) coeficient result))
+   (else
+         (checkDiagonalesAux matrix (+ row 1) (+ column coeficient) 0 0 coeficient result))))
+
+
 ;;  ---------- Exporting all -----------
 
 (provide (all-defined-out))
 
-(define x '((0 0 0 0 0)
-            (0 1 2 0 0)
-            (0 1 2 0 0)
-            (1 1 1 0 0)
-            (0 0 0 0 0)
+(define x '((0 1 0 1 0)
+            (0 1 1 2 0)
+            (0 0 1 1 0)
+            (1 2 0 1 0)
             (0 0 0 0 0)))
 
-(checkVerticales x )
+(checkDiagonales x)
 
 
 
