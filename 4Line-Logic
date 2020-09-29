@@ -13,16 +13,17 @@
   [else (createBoardMatrix rows columns '())]))
 
 (define (createBoardMatrix rows columns result)
-  (cond ((zero? columns)
-         result)
+  (cond [(zero? columns)
+         result]
    (else
          (createBoardMatrix rows (- columns 1) (cons (createList rows '()) result)))))
+
 
 (define (createList rows result)
   (cond ((zero? rows)
         result)
-   (else
-        (createList (- rows 1) (append '(0) result)))))
+   [else
+        (createList (- rows 1) (append '(0) result))]))
 
 
 ;; Select a column to insert the coin
@@ -33,20 +34,194 @@
     [else (cons (car matrix) (append (insertCoin (- column 1) player (cdr matrix))))]))
 
 
-(define (insertCoin_aux selectedRow player)
+(define (insertCoin_aux selectedColumn player)
   (cond
-    [(null? (cdr selectedRow)) (append (list player) (cdr selectedRow))]
-    [(not(zero? (cadr selectedRow))) (append (list player) (cdr selectedRow))]
-    [else (cons (car selectedRow) (insertCoin_aux (cdr selectedRow) player))]))
+    [(null? (cdr selectedColumn)) (append (list player) (cdr selectedColumn))]
+    [(not(zero? (cadr selectedColumn))) (append (list player) (cdr selectedColumn))]
+    [else (cons (car selectedColumn) (insertCoin_aux (cdr selectedColumn) player))]))
+
+;; Returns the row of the coin inserted
+
+(define (insertCoinRow column player matrix)
+  (cond
+    [(= column 1) (insertCoinRow_aux (car matrix) 1 player) ]
+    [else (insertCoinRow (- column 1) player (cdr matrix))]))
 
 
-(insertCoin 5 1
-            (insertCoin 7 2
-            (insertCoin 4 1
-            (insertCoin 7 2
-            (insertCoin 7 1
-            (insertCoin 1 2 (4line 8 8)))))))
+(define (insertCoinRow_aux selectedColumn row player)
+  (cond
+    [(null? (cdr selectedColumn)) row]
+    [(not(zero? (cadr selectedColumn))) row]
+    [else (insertCoinRow_aux (cdr selectedColumn) (+ row 1) player)]))
 
+(trace insertCoinRow)
+
+;; ----------------- Greedy Algorithm -------------------------
+
+(define (AI column computer matrix)
+  (cond
+    [(and (not (zero? (cdr (checkHorizontales matrix)))) (equal? (car (checkHorizontales matrix)) 1)) 
+           (insertCoin ((cdr (checkHorizontales matrix)) computer matrix))]
+    [(and (not (zero? (cdr (checkVerticales matrix)))) (equal? (car (checkVerticales matrix)) 1)) 
+           (insertCoin ((cdr (checkVerticales matrix)) computer matrix))]
+    [(and (not (zero? (cdr (checkDiagonales matrix)))) (equal? (car (checkDiagonales matrix)) 1)) 
+           (insertCoin ((cdr (checkDiagonales matrix)) computer matrix))]
+    [(and (not (zero? (cdr (checkHorizontales matrix)))) (equal? (car (checkHorizontales matrix)) 2)) 
+           (insertCoin ((cdr (checkHorizontales matrix)) computer matrix))]
+    [(and (not (zero? (cdr (checkVerticales matrix)))) (equal? (car (checkVerticales matrix)) 2)) 
+           (insertCoin ((cdr (checkVerticales matrix)) computer matrix))]
+    [(and (not (zero? (cdr (checkDiagonales matrix)))) (equal? (car (checkDiagonales matrix)) 2)) 
+           (insertCoin ((cdr (checkDiagonales matrix)) computer matrix))]
+    [(miembro? computer (car matrix)) ((AIHorizontal column matrix))]
+    [else (AI (+ column 1) computer matrix)]))
+
+
+;; Checks if someone is close to win.
+;; Returns '(playerCloseToWin rowWhereItCanWin)
+
+(define (checkHorizontales matrix)
+  (checkHorizontalesAux matrix 1 1 0 0))
+
+(define (checkHorizontalesAux matrix row column pointsP1 pointsP2)
+  (cond ((and (= pointsP1 3) (= 0 (getByIndexRow matrix row column 1)))
+         (list 1 row))
+        ((and (= pointsP2 3) (= 0 (getByIndexRow matrix row column 1)))
+         (list 2 row))
+        ((> column (length (car matrix)))
+         '(0 0))
+        ((> row (length matrix))
+         (checkHorizontalesAux matrix 1 (+ column 1) 0 0))
+        ((= 1 (getByIndexRow matrix row column 1))
+         (checkHorizontalesAux matrix (+ row 1) column (+ pointsP1 1) 0))
+        ((= 2 (getByIndexRow matrix row column 1))
+         (checkHorizontalesAux matrix (+ row 1) column 0 (+ pointsP2 1)))
+   (else
+         (checkHorizontalesAux matrix (+ row 1) column 0 0))))
+
+
+;(define (checkVertical column matrix))
+
+;(define (checkDiagonal column matrix))
+  
+(define (miembro? elemento lista)
+  (cond 
+    [(null? lista) #t]
+    [(and (zero? (car lista)) (null? (cdr lista))) #t]
+    [(and (zero? (car lista)) (equal? elemento (cadr lista))) #t]
+    [(and (zero? (car lista)) (and (not(equal? elemento (cadr lista))) (not (zero? (cadr lista))))) #f]
+    [else (miembro? elemento (cdr lista))]))
+
+
+
+
+;; ---------------- Funcion verificar ganador ------------
+
+;; Checks if someone is a winner.
+(define (checkWinner matrix)
+  (checkRows matrix)
+  (checkColumns matrix)
+  (checkDiagonals matrix))
+
+
+
+;; Checks if someone win by 4 in a row.
+(define (checkRows matrix)
+  (cond ((null? matrix)
+         #f)
+  (else
+         (checkRowsAux (car matrix) 0 0)
+         (checkRows (cdr matrix)))))
+
+(define (checkRowsAux list pointsP1 pointsP2)
+  (cond ((= pointsP1 4) 
+         (print "Player 1 by rows"))
+        ((= pointsP2 4)
+         (print "Player 2 by rows"))
+        ((null? list)
+         #f)     
+        ((equal? 1 (car list))
+         (checkRowsAux (cdr list) (+ 1 pointsP1) 0))
+        ((equal? 2 (car list))
+         (checkRowsAux (cdr list) 0 (+ 1 pointsP2)))
+  (else
+        (checkRowsAux (cdr list) 0 0))))
+
+
+;; Checks if a player win by 4 in a column.
+(define (checkColumns matrix)
+  (checkColumnsAux matrix 1 1 0 0))
+
+(define (checkColumnsAux matrix row column pointsP1 pointsP2)
+  (cond ((= pointsP1 4)
+         (print "Player 1 by columns"))
+        ((= pointsP2 4)
+         (print "Player 2 by columns"))
+        ((> column (length (car matrix)))
+         #f)
+        ((> row (length matrix))
+         (checkColumnsAux matrix 1 (+ column 1) 0 0))
+        ((= 1 (getByIndexRow matrix row column 1))
+         (checkColumnsAux matrix (+ row 1) column (+ pointsP1 1) 0))
+        ((= 2 (getByIndexRow matrix row column 1))
+         (checkColumnsAux matrix (+ row 1) column 0 (+ pointsP2 1)))
+   (else
+         (checkColumnsAux matrix (+ row 1) column 0 0))))
+
+
+
+;; A couple of functions that get the element in
+;; (row, column) index. 
+(define (getByIndexRow matrix row column cont)
+  (cond ((= row cont)
+         (getByIndexColumn (car matrix) column 1))
+  (else
+         (getByIndexRow (cdr matrix) row column (+ cont 1)))))
+
+(define (getByIndexColumn list column cont)
+  (cond ((= column cont)
+         (car list))
+  (else
+         (getByIndexColumn (cdr list) column (+ cont 1)))))
+
+;; Checks if someone wins by 4 in a diagnal.
+(define (checkDiagonals matrix)
+  (selectDiagonalsToCheck matrix 1 1 1))
+
+(define (selectDiagonalsToCheck matrix row column cont)
+  (cond ((>= row (length matrix))
+         "Done")
+        ((>= column (length (car matrix)))
+         (checkDiagonalsAux matrix row column 0 0 -1)
+         (checkDiagonalsAux matrix row 1 0 0 1)
+         (selectDiagonalsToCheck matrix (+ row 1) column (+ cont 1)))
+  (else
+         (checkDiagonalsAux matrix row column 0 0 1)
+         (checkDiagonalsAux matrix row column 0 0 -1)
+         (selectDiagonalsToCheck matrix row (+ column 1) (+ cont 1)))))
+
+;; Auxiliary function for checkDiagonal.
+;; It checks the right and left diagonal of a specific matrix index.
+;; Coeficient indicates if it has to check right (1) diagonal or left (-1) diagonal.
+(define (checkDiagonalsAux matrix row column pointsP1 pointsP2 coeficient)
+  (cond ((or (< row 1) (< column 1))
+         #f)
+        ((= pointsP1 4)
+         (print "Player 1 by diagonal"))
+        ((= pointsP2 4)
+         (print "Player 2 by diagonal"))
+        ((> column (length (car matrix)))
+         #f)
+        ((> row (length matrix))
+         #f)
+        ((= 1 (getByIndexRow matrix row column 1))
+         (checkDiagonalsAux matrix (+ row 1) (+ column coeficient) (+ pointsP1 1) 0 coeficient))
+        ((= 2 (getByIndexRow matrix row column 1))
+         (checkDiagonalsAux matrix (+ row 1) (+ column coeficient) 0 (+ pointsP2 1) coeficient))
+   (else
+         (checkDiagonalsAux matrix (+ row 1) (+ column coeficient) 0 0 coeficient))))
+
+
+;;(define (AIHorizontal matriz 
 
 
 
