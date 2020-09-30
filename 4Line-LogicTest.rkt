@@ -1,7 +1,9 @@
 #lang racket
 
 
-;; Create the matrix. 
+;; Genera una matriz de ceros
+;; Parametros: Cantidad de filas y columnas, elegidas por el cliente
+;; Salida: Una matriz filas x columnas
 (define (4line rows columns)
   (cond 
     [(< rows 8) (error "Debe ser mínimo un tablero 8x8")]
@@ -11,32 +13,39 @@
   [else (createBoardMatrix rows columns '())]))
 
 (define (createBoardMatrix rows columns result)
-  (cond ((zero? columns)
-         result)
+  (cond [(zero? columns)
+         result]
    (else
          (createBoardMatrix rows (- columns 1) (cons (createList rows '()) result)))))
+
 
 (define (createList rows result)
   (cond ((zero? rows)
         result)
-   (else
-        (createList (- rows 1) (append '(0) result)))))
+   [else
+        (createList (- rows 1) (append '(0) result))]))
 
 
-;; Select a column to insert the coin
+;; Inserta una ficha en la columna deseada
+;; Parametros: Número de columna, identificador del jugador y una matriz
+;; Salida: Una matriz con la ficha agregada en el último espacio disponible de la columna seleccionada
+
 (define (insertCoin column player matrix)
   (cond
-    [(= column 0) (cons (insertCoin_aux (car matrix) player) (cdr matrix))]
+    [(= column 1) (cons (insertCoin_aux (car matrix) player) (cdr matrix))]
     [else (cons (car matrix) (append (insertCoin (- column 1) player (cdr matrix))))]))
 
 
-(define (insertCoin_aux selectedRow player)
+(define (insertCoin_aux selectedColumn player)
   (cond
-    [(null? (cdr selectedRow)) (append (list player) (cdr selectedRow))]
-    [(not(zero? (cadr selectedRow))) (append (list player) (cdr selectedRow))]
-    [else (cons (car selectedRow) (insertCoin_aux (cdr selectedRow) player))]))
+    [(null? (cdr selectedColumn)) (append (list player) (cdr selectedColumn))]
+    [(not(zero? (cadr selectedColumn))) (append (list player) (cdr selectedColumn))]
+    [else (cons (car selectedColumn) (insertCoin_aux (cdr selectedColumn) player))]))
 
-;; Returns the row of the coin inserted
+;; Retorna la fila en la que se inserta la ficha
+;; Parametros: Número de columna, identificador de jugador y una matriz
+;; Salida: Número de fila en la que se inserta la ficha
+
 (define (insertCoinRow column player matrix)
   (cond
     [(= column 1) (insertCoinRow_aux (car matrix) 1 player) ]
@@ -49,119 +58,76 @@
     [(not(zero? (cadr selectedColumn))) row]
     [else (insertCoinRow_aux (cdr selectedColumn) (+ row 1) player)]))
 
-;; ---------------- Funcion verificar ganador ------------
 
-;; Checks if someone is a winner.
-(define (checkWinner matrix)
-  (checkRows matrix)
-  (checkColumns matrix)
-  (checkDiagonals matrix))
+;; ----------------- Greedy Algorithm -------------------------
 
+;; Algoritmo voraz utilizado por la computadora para insertar una ficha en el tablero
+;; Parametros: Identificador del jugador y una matriz
+;; Salida: Llamada a la función insertCoin, con la columna en la que insertará la ficha y una matriz 
 
-
-;; Checks if someone win by 4 in a row.
-(define (checkRows matrix)
-  (cond ((null? matrix)
-         0)
-  (else
-         (checkRowsAux (car matrix) 0 0)
-         (checkRows (cdr matrix)))))
-
-(define (checkRowsAux list pointsP1 pointsP2)
-  (cond ((= pointsP1 4) 
-         1)
-        ((= pointsP2 4)
-         2)
-        ((null? list)
-         0)     
-        ((equal? 1 (car list))
-         (checkRowsAux (cdr list) (+ 1 pointsP1) 0))
-        ((equal? 2 (car list))
-         (checkRowsAux (cdr list) 0 (+ 1 pointsP2)))
-  (else
-        (checkRowsAux (cdr list) 0 0))))
+(define (AI computer matrix)
+  (cond
+    [(and (not (zero? (cadr (checkHorizontales matrix)))) (equal? (car (checkHorizontales matrix)) 2)) 
+           (insertCoin  (cadr (checkHorizontales matrix)) computer matrix)]
+    [(and (not (zero? (cadr (checkVerticales matrix)))) (equal? (car (checkVerticales matrix)) 2)) 
+           (insertCoin (cadr (checkVerticales matrix)) computer matrix)]
+    [(and (not (zero? (car (checkDiagonales matrix)))) (equal? (car (checkDiagonales matrix)) 2)) 
+           (insertCoin (caddr (checkDiagonales matrix)) computer matrix)]
+    [(and (not (zero? (cadr (checkHorizontales matrix)))) (equal? (car (checkHorizontales matrix)) 1)) 
+           (insertCoin  (cadr (checkHorizontales matrix)) computer matrix)]
+    [(and (not (zero? (cadr (checkVerticales matrix)))) (equal? (car (checkVerticales matrix)) 1)) 
+           (insertCoin (cadr (checkVerticales matrix)) computer matrix)]
+    [(and (not (zero? (car (checkDiagonales matrix)))) (equal? (car (checkDiagonales matrix)) 1)) 
+           (insertCoin (caddr (checkDiagonales matrix)) computer matrix)]
+    [(not (zero? (checkVertical matrix)))
+           (insertCoin  (checkVertical matrix) computer matrix)]
+    [(not (zero? (checkHorizontal matrix)))
+           (insertCoin (checkHorizontal matrix) computer matrix)]
+    [(insertCoin (+ (random (length matrix)) 1) computer matrix)]))
 
 
-;; Checks if a player win by 4 in a column.
-(define (checkColumns matrix)
-  (checkColumnsAux matrix 1 1 0 0))
+;; Verifica si algún jugador está cerca de ganar horizontalmente
+;; Parametros: Una matriz
+;; Salida: Una lista con el identificador del jugador cercano a ganar y la columna en la que debe insertar la ficha
 
-(define (checkColumnsAux matrix row column pointsP1 pointsP2)
-  (cond ((= pointsP1 4)
-         1)
-        ((= pointsP2 4)
-         1)
+(define (checkHorizontales matrix)
+  (checkHorizontalesAux matrix 1 1 0 0))
+
+(define (checkHorizontalesAux matrix row column pointsP1 pointsP2)
+  (cond ((and (= pointsP1 3) (= 0 (getByIndexRow matrix row column 1))  (not (= 0 (getByIndexRow matrix row (+ column 1) 1))))
+         (list 1 row))
+        ((and (= pointsP2 3) (= 0 (getByIndexRow matrix row column 1))  (not (= 0 (getByIndexRow matrix row (+ column 1) 1))))
+         (list 2 row))
         ((> column (length (car matrix)))
-         0)
+         '(0 0))
         ((> row (length matrix))
-         (checkColumnsAux matrix 1 (+ column 1) 0 0))
+         (checkHorizontalesAux matrix 1 (+ column 1) 0 0))
         ((= 1 (getByIndexRow matrix row column 1))
-         (checkColumnsAux matrix (+ row 1) column (+ pointsP1 1) 0))
+         (checkHorizontalesAux matrix (+ row 1) column (+ pointsP1 1) 0))
         ((= 2 (getByIndexRow matrix row column 1))
-         (checkColumnsAux matrix (+ row 1) column 0 (+ pointsP2 1)))
+         (checkHorizontalesAux matrix (+ row 1) column 0 (+ pointsP2 1)))
    (else
-         (checkColumnsAux matrix (+ row 1) column 0 0))))
+         (checkHorizontalesAux matrix (+ row 1) column 0 0))))
 
 
+(define (checkHorizontal matrix)
+  (checkHorizontalAux matrix 1 1))
 
-;; A couple of functions that get the element in
-;; (row, column) index.
-(define (getByIndexRow matrix row column cont)
-  (cond ((null?  matrix)
-         -1)
-        ((= row cont)
-         (getByIndexColumn (car matrix) column 1))
-  (else
-         (getByIndexRow (cdr matrix) row column (+ cont 1)))))
+(define (checkHorizontalAux matrix column row)
+  (cond 
+    [(> column (length matrix)) 
+     0]
+    [(> row (length (car matrix)))
+     (checkHorizontalAux matrix (+ column 1) 1)]
+    [(and (and (equal? 2 (getByIndexRow matrix column row 1)) (zero? (getByIndexRow matrix (+ column 1) row 1))) (not (zero? (getByIndexRow matrix (+ column 1) (+ row 1) 1))))
+     (+ column 1)]
+    [else (checkHorizontalAux matrix column (+ row 1))]))
 
-(define (getByIndexColumn list column cont)
-  (cond ((null? list)
-         -1)
-        ((= column cont)
-         (car list))
-  (else
-         (getByIndexColumn (cdr list) column (+ cont 1)))))
 
-;; Checks if someone wins by 4 in a diagnal.
-(define (checkDiagonals matrix)
-  (selectDiagonalsToCheck matrix 1 1 1))
+;; Verifica si algún jugador está cerca de ganar verticalmente
+;; Parametros: Una matriz
+;; Salida: Una lista con el identificador del jugador cercano a ganar y la columna en la que debe insertar la ficha
 
-(define (selectDiagonalsToCheck matrix row column cont)
-  (cond ((> row (length matrix))
-         0)
-        ((> column (length (car matrix)))
-         (checkDiagonalsAux matrix row column 0 0 -1)
-         (checkDiagonalsAux matrix row 1 0 0 1)
-         (selectDiagonalsToCheck matrix (+ row 1) column (+ cont 1)))
-  (else
-         (checkDiagonalsAux matrix row column 0 0 1)
-         (checkDiagonalsAux matrix row column 0 0 -1)
-         (selectDiagonalsToCheck matrix row (+ column 1) (+ cont 1)))))
-
-;; Auxiliary function for checkDiagonal.
-;; It checks the right and left diagonal of a specific matrix index.
-;; Coeficient indicates if it has to check right (1) diagonal or left (-1) diagonal.
-(define (checkDiagonalsAux matrix row column pointsP1 pointsP2 coeficient)
-  (cond ((= pointsP1 4)
-         1)
-        ((= pointsP2 4)
-         2)
-        ((or (< row 1) (< column 1))
-         0)
-        ((> column (length (car matrix)))
-         0)
-        ((> row (length matrix))
-         0)
-        ((= 1 (getByIndexRow matrix row column 1))
-         (checkDiagonalsAux matrix (+ row 1) (+ column coeficient) (+ pointsP1 1) 0 coeficient))
-        ((= 2 (getByIndexRow matrix row column 1))
-         (checkDiagonalsAux matrix (+ row 1) (+ column coeficient) 0 (+ pointsP2 1) coeficient))
-   (else
-         (checkDiagonalsAux matrix (+ row 1) (+ column coeficient) 0 0 coeficient))))
-
-;; Checks if someone is close to win by Columns.
-;; Returns '(playerCloseToWin rowWhereItCanWin)
-;; Checks if someone win by 4 in a row.
 (define (checkVerticales matrix)
   (checkVerticalesAux2 matrix '(0 0) 1))
 
@@ -201,31 +167,27 @@
   (else
          #t)))
 
+;; Verifica si existe alguna ficha de la computadora con un espacio disponible verticalmente
+;; Parametros: Una matriz y un contador que inicia en 1
+;; Salida: Numero de comlumna en la que se debe insertar la ficha si el espacio se encuentra disponible
+(define (checkVertical matrix)
+  (checkVerticalAux matrix 1 1))
+  
+(define (checkVerticalAux matrix column row)
+  (cond 
+    [(> column (length matrix)) 
+     0]
+    [(> row (length (car matrix)))
+     (checkVerticalAux matrix (+ column 1) 1)]
+    [(and (equal? 2 (getByIndexRow matrix column row 1)) (not(zero? (getByIndexRow matrix column (- row 1) 1))))
+     (checkVerticalAux matrix (+ column 1) 1)]
+    [(and (equal? 2 (getByIndexRow matrix column row 1)) (zero? (getByIndexRow matrix column (- row 1) 1)))
+     column]
+    [else (checkVerticalAux matrix column (+ row 1))]))
 
-;; Checks if someone is close to win by Rows.
-;; Returns '(playerCloseToWin rowWhereItCanWin)
-(define (checkHorizontales matrix)
-  (checkHorizontalesAux matrix 1 1 0 0))
-
-(define (checkHorizontalesAux matrix row column pointsP1 pointsP2)
-  (cond ((and (= pointsP1 3) (= 0 (getByIndexRow matrix row column 1))  (not (= 0 (getByIndexRow matrix row (+ column 1) 1))))
-         (list 1 row))
-        ((and (= pointsP2 3) (= 0 (getByIndexRow matrix row column 1))  (not (= 0 (getByIndexRow matrix row (+ column 1) 1))))
-         (list 2 row))
-        ((> column (length (car matrix)))
-         '(0 0))
-        ((> row (length matrix))
-         (checkHorizontalesAux matrix 1 (+ column 1) 0 0))
-        ((= 1 (getByIndexRow matrix row column 1))
-         (checkHorizontalesAux matrix (+ row 1) column (+ pointsP1 1) 0))
-        ((= 2 (getByIndexRow matrix row column 1))
-         (checkHorizontalesAux matrix (+ row 1) column 0 (+ pointsP2 1)))
-   (else
-         (checkHorizontalesAux matrix (+ row 1) column 0 0))))
-
-
-;; Checks if someone is close to win by Diagonals.
-;; Returns '(playerCloseToWin rowWhereItCanWin)
+;; Verifica si algún jugador está cerca de ganar diagonalmente
+;; Parametros: Una matriz
+;; Salida: Una lista con el identificador del jugador cercano a ganar y la columna en la que debe insertar la ficha
 
 (define (checkDiagonales matrix)
   (selectDiagonalesToCheck matrix 1 1 1 '(0 0)))
@@ -264,16 +226,142 @@
          (checkDiagonalesAux matrix (+ row 1) (+ column coeficient) 0 0 coeficient result))))
 
 
+;; ---------------- Funcion verificar ganador ------------
+
+;; Verifica si algún jugador es ganador (tiene 4 fichas en línea)
+;; Parametros: Una matriz
+;; Salida: Un string que anuncia al ganador
+
+(define (checkWinner matrix)
+  (cond ((< 0 (checkRows matrix 0)) (checkRows matrix 0))
+        ((< 0 (checkColumns matrix)) (checkColumns matrix))
+        ((< 0 (checkDiagonals matrix)) (checkDiagonals matrix))
+  (else 0)))
+
+
+;; Verifica si algún jugador tiene 4 fichas en línea horizontalmente
+;; Parametros: Una matriz
+;; Salida: Un string que anuncia al ganador
+
+(define (checkRows matrix result)
+  (cond ((< 0 result)
+         result)
+        ((null? matrix)
+         0)
+  (else
+         (checkRows (cdr matrix) (checkRowsAux (car matrix) 0 0)))))
+
+(define (checkRowsAux list pointsP1 pointsP2)
+  (cond ((= pointsP1 4) 
+         1)
+        ((= pointsP2 4)
+         2)
+        ((null? list)
+         0)     
+        ((equal? 1 (car list))
+         (checkRowsAux (cdr list) (+ 1 pointsP1) 0))
+        ((equal? 2 (car list))
+         (checkRowsAux (cdr list) 0 (+ 1 pointsP2)))
+  (else
+        (checkRowsAux (cdr list) 0 0))))
+
+
+;; Verifica si algún jugador tiene 4 fichas en línea verticalmente
+;; Parametros: Una matriz
+;; Salida: Un string que anuncia al ganador
+
+(define (checkColumns matrix)
+  (checkColumnsAux matrix 1 1 0 0))
+
+(define (checkColumnsAux matrix row column pointsP1 pointsP2)
+  (cond ((= pointsP1 4)
+         1)
+        ((= pointsP2 4)
+         2)
+        ((> column (length (car matrix)))
+         0)
+        ((> row (length matrix))
+         (checkColumnsAux matrix 1 (+ column 1) 0 0))
+        ((= 1 (getByIndexRow matrix row column 1))
+         (checkColumnsAux matrix (+ row 1) column (+ pointsP1 1) 0))
+        ((= 2 (getByIndexRow matrix row column 1))
+         (checkColumnsAux matrix (+ row 1) column 0 (+ pointsP2 1)))
+   (else
+         (checkColumnsAux matrix (+ row 1) column 0 0))))
+
+
+
+;; A couple of functions that get the element in
+;; (row, column) index.
+(define (getByIndexRow matrix row column cont)
+  (cond ((null?  matrix)
+         -1)
+        ((= row cont)
+         (getByIndexColumn (car matrix) column 1))
+  (else
+         (getByIndexRow (cdr matrix) row column (+ cont 1)))))
+
+(define (getByIndexColumn list column cont)
+  (cond ((null? list)
+         -1)
+        ((= column cont)
+         (car list))
+  (else
+         (getByIndexColumn (cdr list) column (+ cont 1)))))
+
+;; Verifica si algún jugador tiene 4 fichas en línea diagonalmente
+;; Parametros: Una matriz
+;; Salida: Un string que anuncia al ganador
+
+(define (checkDiagonals matrix)
+  (selectDiagonalsToCheck matrix 1 1 1))
+
+(define (selectDiagonalsToCheck matrix row column cont)
+  (cond ((>= row (length matrix))
+         0)
+        ((>= column (length (car matrix)))
+         (checkDiagonalsAux matrix row column 0 0 -1)
+         (checkDiagonalsAux matrix row 1 0 0 1)
+         (selectDiagonalsToCheck matrix (+ row 1) column (+ cont 1)))
+  (else
+         (checkDiagonalsAux matrix row column 0 0 1)
+         (checkDiagonalsAux matrix row column 0 0 -1)
+         (selectDiagonalsToCheck matrix row (+ column 1) (+ cont 1)))))
+
+;; Auxiliary function for checkDiagonal.
+;; It checks the right and left diagonal of a specific matrix index.
+;; Coeficient indicates if it has to check right (1) diagonal or left (-1) diagonal.
+(define (checkDiagonalsAux matrix row column pointsP1 pointsP2 coeficient)
+  (cond ((or (< row 1) (< column 1))
+         0)
+        ((= pointsP1 4)
+         1)
+        ((= pointsP2 4)
+         2)
+        ((> column (length (car matrix)))
+         0)
+        ((> row (length matrix))
+         0)
+        ((= 1 (getByIndexRow matrix row column 1))
+         (checkDiagonalsAux matrix (+ row 1) (+ column coeficient) (+ pointsP1 1) 0 coeficient))
+        ((= 2 (getByIndexRow matrix row column 1))
+         (checkDiagonalsAux matrix (+ row 1) (+ column coeficient) 0 (+ pointsP2 1) coeficient))
+   (else
+         (checkDiagonalsAux matrix (+ row 1) (+ column coeficient) 0 0 coeficient))))
+
 ;;  ---------- Exporting all -----------
 
 (provide (all-defined-out))
 
-(define x '((0 2 2 2 0)
-            (0 1 0 1 0)
-            (1 1 1 1 2)
-            (0 0 1 1 1)))
+(define x '((0 1 2 2 2 1 2 1 2)
+            (0 1 0 1 0 1 2 1 2)
+            (1 1 2 1 1 2 2 1 2)
+            (0 0 1 1 1 1 2 1 2)
+            (0 0 1 1 1 1 2 1 2)
+            (0 0 1 1 1 1 2 1 2)
+            (0 0 1 1 1 1 2 1 2)))
 
-(checkVerticales x)
+(checkDiagonales x)
 
 
 

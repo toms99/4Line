@@ -21,6 +21,7 @@
                     (max-value 16)
                     (init-value 10)))
 
+; Make a slider to define number of rows
 (define rowsSlider (new slider%
                     (label "Rows")
                     (parent frame)
@@ -28,19 +29,23 @@
                     (max-value 16)
                     (init-value 10)))
 
+; The logo of the game for the main button.
 (define gameLogo (make-object bitmap%
                (build-path (current-directory) "sources" "4LineLogo.png")))
 
 ; Make a button in the frame
+; This is the "new game" button
 (new button% [parent frame]
              [label gameLogo]
              ; Callback procedure for a button click:
              [callback (lambda (button event)
                          (createBoardButtons (send columnSlider get-value) (send rowsSlider get-value))
                          (send frame show #f)
-                         (send gameFrame show #t)            
+                         (send gameFrame show #t)
+                         (mainAux 2)
                          )])
 
+; Close button.
 (new button% [parent frame]
              [label "CLOSE"]
              [callback (lambda (button event)
@@ -66,9 +71,9 @@
 ; Button to go back to MainWindow
 (new button% [parent gameFrame]
              [label "Back to Menu"]
-             [callback (lambda (button event)
-                         (send frame show #t)
+             [callback (lambda (button event) 
                          (send gameFrame show #f)
+                         (send frame show #t)
                          )])
 
 
@@ -82,14 +87,27 @@
        [stretchable-width #f]	 
        [stretchable-height #f]))
 
+(define (createGameWindow gameWindow)
+  (new message% [parent gameWindow]
+                [label "No events so far..."])
+  (new button% [parent gameWindow]
+               [label "Back to Menu"]
+               [callback (lambda (button event) 
+                         (send gameWindow show #f)
+                         (send frame show #t)
+                         )]))
+
+
 ;; Creates all the holeButtons inside board.
 ;; param: number of columns and rows.
+;; output: display the board buttons.
 (define (createBoardButtons columns rows)
   ;; Creates the gui matrix and the logic matrix.
   (createBoardButtonsRows rows columns 1 (4line rows columns)))
 
 ;; Create the gui matrix.
-;; Display all the needed buttons.
+;; param: rows, columns, cont, logicMatrix.
+;; output: all the row board buttons.
 (define (createBoardButtonsRows rows columns cont logicMatrix)
   (cond ((> cont rows)
          (set! buttonsMatrix (list buttonsMatrix logicMatrix)))
@@ -100,7 +118,8 @@
          (createBoardButtonsRows rows columns (+ cont 1) logicMatrix))))
 
 ;; Auxiliary function for createBoardButtonsRows
-;; Sets the buttons in the columns.
+;; param: rows, columns, parentFrame, rowList, totalRows, totalColumns.
+;; output: all the column board buttons.
 (define (createBoardButtonsColumns row columns parent cont list totalRows totalColumns)
   (cond ((> cont columns)
          list)
@@ -110,28 +129,39 @@
                                    totalRows totalColumns))))
 
 ;; Disables/enables all the board buttons.
+;; param: boolean.
+;; output: all the buttons enabled or disabled.
 (define (enableButtons enable?)
   (enableButtonsRows (car buttonsMatrix) enable?))
 
+;; Auxiliary function for enableButtons.
+;; param: listOfButtonsToEnable, boolean.
+;; output: the rowButtons enabled/desabled.
 (define (enableButtonsRows buttonsList enable?)
   (cond ((null? buttonsList))
   (else
-   (enableButtonsColumns (car buttonsList) enable?)
+   (enableButtonsColumns (car buttonsList) (cadr buttonsMatrix) enable?)
    (enableButtonsRows (cdr buttonsList) enable?))))
 
-(define (enableButtonsColumns buttonsList enable?)
+;; Auxiliary function for enableButtons.
+;; param: listOfButtonsToEnable, boolean.
+;; output: the columnButtons enabled/desabled.
+(define (enableButtonsColumns buttonsList logicList enable?)
   (cond ((null? buttonsList))
   (else
    (send (car buttonsList) enable enable?)
-   (enableButtonsColumns (cdr buttonsList) enable?))))
+   (enableButtonsColumns (cdr buttonsList) (cdr logicList) enable?))))
+
 
 ;; creates vertical Pane inside boardPanel
+;; param: non
+;; output: a vertical pane.
 (define (createHorizontalStandardPane)
   (new horizontal-pane%	 
        [parent boardPanel]	 	 	 
        [alignment '(center center)]))
 
-;; The three colored coins.
+;; The three colored coins for the board
 (define coinGrey (make-object bitmap%
                (build-path (current-directory) "sources" "holeCoinBasic.png")))
 (define coinRed (make-object bitmap%
@@ -139,14 +169,15 @@
 (define coinGold (make-object bitmap%
                (build-path (current-directory) "sources" "holeCoinGold.png")))
 
-;; Creates an individual holeButton
-;; param: parent object, number columns.
+;; Creates an individual holeButton.
+;; param: parentObject, row, column, list, totalRows, totalColumns, booleEnable
+;; output: one new button in the board.
 (define (createHoleButton parent rows column list totalRows totalColumns enabled?)
         (cons (new button%
              [label coinGrey]
              [parent parent]
              [callback (lambda (button event)
-                         (setChoseHole rows column totalRows totalColumns))]
+                         (setChoseHole rows column totalRows totalColumns 1))]
              [min-width 45]	 
    	     [min-height 45]
              [enabled enabled?]) list))
@@ -154,6 +185,8 @@
 ;; Create a matrix for the gameBoard
 ;; The form of this matrix is:
 ;; '(0 0 0)(0 0 0)(0 0 0)
+;; param: totalRows, totalColumns, resultMatrix.
+;; output: matrix.
 (define (createBoardMatrix rows columns result)
   (cond ((zero? columns)
          result)
@@ -167,23 +200,36 @@
         (createList (- rows 1) (append '(0) result)))))
 
 
-;; When the user chooses a button
-(define (setChoseHole row column totalRows totalColumns)
+;; When the user click a boardButton this function is called.
+;; param: rowButton, columnButton, totalRows totalColumns.
+;; output: calls the main function so the PC can play and inserts a coin in the hole.
+(define (setChoseHole row column totalRows totalColumns playerOn)
   (send msg set-label (~a row
                           "x"
                           column))
- (send (matrixGet (- totalRows (insertCoinRow column 1 (cadr buttonsMatrix))) (- totalColumns column ) 0 (car buttonsMatrix)) set-label coinRed)
- (set! buttonsMatrix (list (car buttonsMatrix)
-                           (insertCoin (- column 1) 1 (cadr buttonsMatrix))))
- (mainAux 2))
+  (cond ((= 1 playerOn)
+         (send (matrixGet (- totalRows (insertCoinRow column 1 (cadr buttonsMatrix))) (- totalColumns column ) 0 (car buttonsMatrix)) set-label coinRed)
+         (set! buttonsMatrix (list (car buttonsMatrix)
+                                   (insertCoin (- column 1) 1 (cadr buttonsMatrix))))
+         (mainAux 2))
+        
+        ((= 2 playerOn)
+         (send (matrixGet (- totalRows (insertCoinRow column 1 (cadr buttonsMatrix))) (- totalColumns column ) 0 (car buttonsMatrix)) set-label coinGold)
+         (mainAux 1))))
 
 ;; Gets the button we want in the matrix.
+;; param: rowButton, columnButton, cont = 1, listOfButtons
+;; output: the button we are looking for.
 (define (matrixGet row column cont list)
   (cond ((= row cont)
          (matrixGetAux row column 0 (car list)))
   (else
     (matrixGet row column (+ cont 1) (cdr list)))))
 
+;; Auxiliary function for matrixGet.
+;; It searches in the columns of the matrix.
+;; param: rowButton, columnButton, cont = 1, listOfButtons
+;; output: the button we are looking for.
 (define (matrixGetAux row column cont list)
   (cond ((= column cont)
          (car list))
@@ -191,22 +237,51 @@
     (matrixGetAux row column (+ cont 1) (cdr list)))))
 
 
-(define x (createBoardMatrix 10 10 '()))
-(set! x (cons 0 (car x)))
+;; Returns the column where is a different element.
+(define (findDifference matrixA matrixB cont result)
+  (cond ((null? matrixA) 0)
+        ((not (zero? result)) result)
+  (else
+         (findDifference (cdr matrixA) (cdr matrixB) (+ cont 1)
+                         (findDifferenceAux (car matrixA) (car matrixB) cont)))))
 
+(define (findDifferenceAux listA listB cont)
+  (cond ((null? listA) 0)
+        ((not (= (car listA) (car listB)))  cont)
+  (else (findDifferenceAux (cdr listA) (cdr listB) cont))))
+
+
+(define (setTheDifferentButton matrixA matrixB playerOn)
+  (setChoseHole 1 (findDifference matrixA matrixB 1 0)
+                (length matrixA)
+                (length (car matrixA))
+                playerOn)
+  (set! buttonsMatrix (list (car buttonsMatrix)
+                                   matrixA)))
 
 ;; --------------- Building the main ---------------
+
 (define (main)
   ; Show the frame by calling its show method
   (send frame show #t))
 
+;; Auxiliary function.
+;; Is called during the game to let the other player play.
+;; param: player
+;; output: none, it only runs the logic.
 (define (mainAux playerOn)
+  (print (cadr buttonsMatrix))
   (cond ((not (= 0 (checkWinner (cadr buttonsMatrix))))
-         (checkWinner (cadr buttonsMatrix)))
+         (print "hdfghsdfgsdfgsfdgadfgaggfadfga"))
         ((= playerOn 1)
          (enableButtons #t))
         ((= playerOn 2)
-         (enableButtons #f))))
+         (enableButtons #f)
+         (setTheDifferentButton (AI 2 (cadr buttonsMatrix))
+                                (cadr buttonsMatrix)
+                                playerOn)
+         
+         (mainAux 1))))
 
 ;; --------------- Testing the program -----------------
 
