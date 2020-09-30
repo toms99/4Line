@@ -33,7 +33,7 @@
 
 (define (insertCoin column player matrix)
   (cond
-    [(= column 0) (cons (insertCoin_aux (car matrix) player) (cdr matrix))]
+    [(= column 1) (cons (insertCoin_aux (car matrix) player) (cdr matrix))]
     [else (cons (car matrix) (append (insertCoin (- column 1) player (cdr matrix))))]))
 
 
@@ -69,21 +69,21 @@
 (define (AI computer matrix)
   (cond
     [(and (not (zero? (cadr (checkHorizontales matrix)))) (equal? (car (checkHorizontales matrix)) 2)) 
-           (insertCoin (- (cadr (checkHorizontales matrix)) 1) computer matrix)]
+           (insertCoin (cadr (checkHorizontales matrix)) computer matrix)]
     [(and (not (zero? (cadr (checkVerticales matrix)))) (equal? (car (checkVerticales matrix)) 2)) 
-           (insertCoin ((cadr (checkVerticales matrix)) computer matrix))]
+           (insertCoin (cadr (checkVerticales matrix)) computer matrix)]
     [(and (not (zero? (car (checkDiagonales matrix)))) (equal? (car (checkDiagonales matrix)) 2)) 
            (insertCoin (caddr (checkDiagonales matrix)) computer matrix)]
     [(and (not (zero? (cadr (checkHorizontales matrix)))) (equal? (car (checkHorizontales matrix)) 1)) 
            (insertCoin (- (cadr (checkHorizontales matrix)) 1) computer matrix)]
     [(and (not (zero? (cadr (checkVerticales matrix)))) (equal? (car (checkVerticales matrix)) 1)) 
-           (insertCoin ((cadr (checkVerticales matrix)) computer matrix))]
+           (insertCoin (cadr (checkVerticales matrix)) computer matrix)]
     [(and (not (zero? (car (checkDiagonales matrix)))) (equal? (car (checkDiagonales matrix)) 1)) 
            (insertCoin (caddr (checkDiagonales matrix)) computer matrix)]
-    [(not (zero? (checkVertical matrix)))
-           (insertCoin (- (checkVertical matrix) 1) computer matrix)]
     [(not (zero? (checkHorizontal matrix)))
            (insertCoin (checkHorizontal matrix) computer matrix)]
+    [(not (zero? (checkVertical matrix)))
+           (insertCoin (checkVertical matrix) computer matrix)]
     [(insertCoin (+ (random (length matrix)) 1) computer matrix)]))
 
 ;; Verifica si algún jugador está cerca de ganar horizontalmente
