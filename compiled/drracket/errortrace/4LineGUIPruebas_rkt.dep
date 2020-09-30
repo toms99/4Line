@@ -1,0 +1,1 @@
+("7.2" racket ("b52d151a0404e77530fa74185eeabe331522900f" . "d958d85c9b644091a374b2656f515b6793a07b85") #"/home/tomas/Documents/CodeTests/4Line-LogicTest.rkt" (collects #"errortrace" #"errortrace-key.rkt") (collects #"racket" #"gui" #"base.rkt") (collects #"racket" #"include.rkt") (collects #"racket" #"main.rkt") (collects #"racket" #"runtime-config.rkt"))

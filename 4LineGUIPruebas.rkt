@@ -42,7 +42,6 @@
                          (createBoardButtons (send columnSlider get-value) (send rowsSlider get-value))
                          (send frame show #f)
                          (send gameFrame show #t)
-                         (mainAux 2)
                          )])
 
 ; Close button.
@@ -97,6 +96,11 @@
                          (send frame show #t)
                          )]))
 
+;; --------------------- Define a Winner window --------------
+(define (winnerWindow winner)
+  (enableButtons #f)
+  (cond((= 2 winner) (send gameFrame show #f))
+       ((= 1 winner) (send gameFrame show #f))))
 
 ;; Creates all the holeButtons inside board.
 ;; param: number of columns and rows.
@@ -177,7 +181,7 @@
              [label coinGrey]
              [parent parent]
              [callback (lambda (button event)
-                         (setChoseHole rows column totalRows totalColumns 1))]
+                         (setChoseHole rows column totalRows totalColumns 1 (cadr buttonsMatrix)))]
              [min-width 45]	 
    	     [min-height 45]
              [enabled enabled?]) list))
@@ -203,18 +207,18 @@
 ;; When the user click a boardButton this function is called.
 ;; param: rowButton, columnButton, totalRows totalColumns.
 ;; output: calls the main function so the PC can play and inserts a coin in the hole.
-(define (setChoseHole row column totalRows totalColumns playerOn)
+(define (setChoseHole row column totalRows totalColumns playerOn oldMatrix)
   (send msg set-label (~a row
                           "x"
                           column))
   (cond ((= 1 playerOn)
-         (send (matrixGet (- totalRows (insertCoinRow column 1 (cadr buttonsMatrix))) (- totalColumns column ) 0 (car buttonsMatrix)) set-label coinRed)
+         (send (matrixGet (- totalRows (insertCoinRow column 1 (cadr buttonsMatrix))) (- totalColumns (- column 1) ) 0 (car buttonsMatrix)) set-label coinRed)
          (set! buttonsMatrix (list (car buttonsMatrix)
-                                   (insertCoin (- column 1) 1 (cadr buttonsMatrix))))
+                                   (insertCoin column 1 (cadr buttonsMatrix))))
          (mainAux 2))
-        
         ((= 2 playerOn)
-         (send (matrixGet (- totalRows (insertCoinRow column 1 (cadr buttonsMatrix))) (- totalColumns column ) 0 (car buttonsMatrix)) set-label coinGold)
+         ;(send (matrixGet (- totalRows (insertCoinRow column 1 (cadr buttonsMatrix))) (- totalColumns column ) 0 (car buttonsMatrix)) set-label coinGold)
+         (send (matrixGet  (- totalRows  (insertCoinRow column 1  oldMatrix))   (- totalColumns (- column 1))  0 (car buttonsMatrix)) set-label coinGold)
          (mainAux 1))))
 
 ;; Gets the button we want in the matrix.
@@ -222,7 +226,7 @@
 ;; output: the button we are looking for.
 (define (matrixGet row column cont list)
   (cond ((= row cont)
-         (matrixGetAux row column 0 (car list)))
+         (matrixGetAux row column 1 (car list)))
   (else
     (matrixGet row column (+ cont 1) (cdr list)))))
 
@@ -252,12 +256,17 @@
 
 
 (define (setTheDifferentButton matrixA matrixB playerOn)
-  (setChoseHole 1 (findDifference matrixA matrixB 1 0)
-                (length matrixA)
-                (length (car matrixA))
-                playerOn)
   (set! buttonsMatrix (list (car buttonsMatrix)
-                                   matrixA)))
+                                   (cadr matrixA)))
+
+  (print (car matrixA))
+  (print (findDifference (cadr matrixA) matrixB 1 0))
+  (setChoseHole 1 (findDifference (cadr matrixA) matrixB 1 0 )
+                (length (car (cadr matrixA)))
+                (length (cadr matrixA))                
+                playerOn
+                matrixB)
+  )
 
 ;; --------------- Building the main ---------------
 
@@ -272,7 +281,7 @@
 (define (mainAux playerOn)
   (print (cadr buttonsMatrix))
   (cond ((not (= 0 (checkWinner (cadr buttonsMatrix))))
-         (print "hdfghsdfgsdfgsfdgadfgaggfadfga"))
+         (winnerWindow (checkWinner (cadr buttonsMatrix))))
         ((= playerOn 1)
          (enableButtons #t))
         ((= playerOn 2)

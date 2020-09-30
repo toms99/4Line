@@ -1,6 +1,8 @@
 #lang racket
 
 
+(require racket/trace)
+ 
 ;; Genera una matriz de ceros
 ;; Parametros: Cantidad de filas y columnas, elegidas por el cliente
 ;; Salida: Una matriz filas x columnas
@@ -68,23 +70,22 @@
 (define (AI computer matrix)
   (cond
     [(and (not (zero? (cadr (checkHorizontales matrix)))) (equal? (car (checkHorizontales matrix)) 2)) 
-           (insertCoin  (cadr (checkHorizontales matrix)) computer matrix)]
+           (list (cadr (checkHorizontales matrix)) (insertCoin (cadr (checkHorizontales matrix)) computer matrix))]
     [(and (not (zero? (cadr (checkVerticales matrix)))) (equal? (car (checkVerticales matrix)) 2)) 
-           (insertCoin (cadr (checkVerticales matrix)) computer matrix)]
+           (list (cadr (checkVerticales matrix)) (insertCoin (cadr (checkVerticales matrix)) computer matrix))]
     [(and (not (zero? (car (checkDiagonales matrix)))) (equal? (car (checkDiagonales matrix)) 2)) 
-           (insertCoin (caddr (checkDiagonales matrix)) computer matrix)]
+           (list (caddr (checkDiagonales matrix)) (insertCoin (caddr (checkDiagonales matrix)) computer matrix))]
     [(and (not (zero? (cadr (checkHorizontales matrix)))) (equal? (car (checkHorizontales matrix)) 1)) 
-           (insertCoin  (cadr (checkHorizontales matrix)) computer matrix)]
+           (list (cadr (checkHorizontales matrix)) (insertCoin (cadr (checkHorizontales matrix)) computer matrix))]
     [(and (not (zero? (cadr (checkVerticales matrix)))) (equal? (car (checkVerticales matrix)) 1)) 
-           (insertCoin (cadr (checkVerticales matrix)) computer matrix)]
+           (list (cadr (checkVerticales matrix)) (insertCoin (cadr (checkVerticales matrix)) computer matrix))]
     [(and (not (zero? (car (checkDiagonales matrix)))) (equal? (car (checkDiagonales matrix)) 1)) 
-           (insertCoin (caddr (checkDiagonales matrix)) computer matrix)]
-    [(not (zero? (checkVertical matrix)))
-           (insertCoin  (checkVertical matrix) computer matrix)]
+           (list (caddr (checkDiagonales matrix)) (insertCoin (caddr (checkDiagonales matrix)) computer matrix))]
     [(not (zero? (checkHorizontal matrix)))
-           (insertCoin (checkHorizontal matrix) computer matrix)]
-    [(insertCoin (+ (random (length matrix)) 1) computer matrix)]))
-
+           (list (checkHorizontal matrix) (insertCoin (checkHorizontal matrix) computer matrix))]
+    [(not (zero? (checkVertical matrix)))
+           (list (checkVertical matrix) (insertCoin (checkVertical matrix) computer matrix))]
+    [(list (+ (random (length matrix)) 1) (insertCoin (+ (random (length matrix)) 1) computer matrix))]))
 
 ;; Verifica si algún jugador está cerca de ganar horizontalmente
 ;; Parametros: Una matriz
@@ -96,6 +97,8 @@
 (define (checkHorizontalesAux matrix row column pointsP1 pointsP2)
   (cond ((and (= pointsP1 3) (= 0 (getByIndexRow matrix row column 1))  (not (= 0 (getByIndexRow matrix row (+ column 1) 1))))
          (list 1 row))
+        ((and (= pointsP1 3) (= 0 (getByIndexRow matrix (- row 4) column 1))  (not (= 0 (getByIndexRow matrix row (+ column 1) 1))))
+         (list 1 (- row 4)))
         ((and (= pointsP2 3) (= 0 (getByIndexRow matrix row column 1))  (not (= 0 (getByIndexRow matrix row (+ column 1) 1))))
          (list 2 row))
         ((> column (length (car matrix)))
