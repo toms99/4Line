@@ -81,11 +81,10 @@
     [(and (not (zero? (car (checkDiagonales matrix)))) (equal? (car (checkDiagonales matrix)) 1)) 
            (insertCoin (caddr (checkDiagonales matrix)) computer matrix)]
     [(not (zero? (checkVertical matrix)))
-           (insertCoin (checkVertical matrix) computer matrix)]
+           (insertCoin (- (checkVertical matrix) 1) computer matrix)]
     [(not (zero? (checkHorizontal matrix)))
            (insertCoin (checkHorizontal matrix) computer matrix)]
     [(insertCoin (+ (random (length matrix)) 1) computer matrix)]))
-(trace AI)
 
 ;; Verifica si algún jugador está cerca de ganar horizontalmente
 ;; Parametros: Una matriz
@@ -290,8 +289,10 @@
 
 
 
-;; A couple of functions that get the element in
-;; (row, column) index.
+;; Obtiene el elemento de una matriz
+;; Parametros: Una matriz, número de columna, número de fila, contador que inicia en 1
+;; Salida: Elemento de la matriz
+
 (define (getByIndexRow matrix row column cont)
   (cond ((null?  matrix)
          -1)
@@ -327,8 +328,11 @@
          (checkDiagonalsAux matrix row column 0 0 -1)
          (selectDiagonalsToCheck matrix row (+ column 1) (+ cont 1)))))
 
-;; Auxiliary function for checkDiagonal.
-;; It checks the right and left diagonal of a specific matrix index.
+;; Función auxiliar para checkDiagonal.
+;; Revisa la diagonal derecha e izquierda del índice específico de una matriz
+;; Parametros: Una matriz, número de fila, número de columna, número de repeticiones de la ficha del usuario,
+;;             número de repeticiones de la ficha de la computadora, un coeficiente que indica si se ha verificado la derecha de la diagonal (1) o la izquierda (-1)
+;; Salida: Un string que anuncia al ganador
 ;; Coeficient indicates if it has to check right (1) diagonal or left (-1) diagonal.
 (define (checkDiagonalsAux matrix row column pointsP1 pointsP2 coeficient)
   (cond ((or (< row 1) (< column 1))
