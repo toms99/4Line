@@ -44,6 +44,7 @@
              [callback (lambda (button event)
                          (send frame show #f))])
 
+
 ;; --------------- GameWindow ---------------
 
 ;; Board buttons matrix
@@ -128,13 +129,19 @@
        [parent boardPanel]	 	 	 
        [alignment '(center center)]))
 
-
+;; The three colored coins.
+(define coinGrey (make-object bitmap%
+               (build-path (current-directory) "sources" "holeCoinBasic.png")))
+(define coinRed (make-object bitmap%
+               (build-path (current-directory) "sources" "holeCoinRed.png")))
+(define coinGold (make-object bitmap%
+               (build-path (current-directory) "sources" "holeCoinGold.png")))
 
 ;; Creates an individual holeButton
 ;; param: parent object, number columns.
 (define (createHoleButton parent rows column list totalRows totalColumns enabled?)
         (cons (new button%
-             [label "X"]
+             [label coinGrey]
              [parent parent]
              [callback (lambda (button event)
                          (setChoseHole rows column totalRows totalColumns))]
@@ -163,7 +170,7 @@
   (send msg set-label (~a row
                           "x"
                           column))
- (send (matrixGet (- totalRows (insertCoinRow column 1 (cadr buttonsMatrix))) (- totalColumns column ) 0 (car buttonsMatrix)) set-label "O")
+ (send (matrixGet (- totalRows (insertCoinRow column 1 (cadr buttonsMatrix))) (- totalColumns column ) 0 (car buttonsMatrix)) set-label coinRed)
  (set! buttonsMatrix (list (car buttonsMatrix)
                            (insertCoin (- column 1) 1 (cadr buttonsMatrix))))
  (mainAux 2))

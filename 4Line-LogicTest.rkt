@@ -107,13 +107,17 @@
 ;; A couple of functions that get the element in
 ;; (row, column) index.
 (define (getByIndexRow matrix row column cont)
-  (cond ((= row cont)
+  (cond ((null?  matrix)
+         -1)
+        ((= row cont)
          (getByIndexColumn (car matrix) column 1))
   (else
          (getByIndexRow (cdr matrix) row column (+ cont 1)))))
 
 (define (getByIndexColumn list column cont)
-  (cond ((= column cont)
+  (cond ((null? list)
+         -1)
+        ((= column cont)
          (car list))
   (else
          (getByIndexColumn (cdr list) column (+ cont 1)))))
@@ -159,29 +163,29 @@
 ;; Returns '(playerCloseToWin rowWhereItCanWin)
 ;; Checks if someone win by 4 in a row.
 (define (checkVerticales matrix)
-  (checkVerticalesAux2 matrix '(0 0)))
+  (checkVerticalesAux2 matrix '(0 0) 1))
 
-(define (checkVerticalesAux2 matrix result)
+(define (checkVerticalesAux2 matrix result cont)
   (cond ((or (= 1 (car result)) (= 2 (car result)))
          result)
         ((null? matrix)
          result)
   (else
-         (checkVerticalesAux2 (cdr matrix) (checkVerticalesAux (car matrix) 0 0 1)))))
+         (checkVerticalesAux2 (cdr matrix) (checkVerticalesAux (car matrix) 0 0 cont) (+ cont 1)))))
 
 (define (checkVerticalesAux lista pointsP1 pointsP2 cont)
-  (cond ((and (= pointsP1 3) (equal? 0 (car lista))) 
+  (cond ((null? lista)
+         '(0 0))   
+        ((and (= pointsP1 3) (equal? 0 (car lista))  (fullColumn? lista)) 
          (list 1 cont))
-        ((and (= pointsP2 3) (equal? 0 (car lista)))
-         (list 2 cont))
-        ((null? lista)
-         '(0 0))     
+        ((and (= pointsP2 3) (equal? 0 (car lista))  (fullColumn? lista))
+         (list 2 cont))          
         ((equal? 1 (car lista))
-         (checkVerticalesAux (cdr lista) (+ 1 pointsP1) 0 (+ cont 1)))
+         (checkVerticalesAux (cdr lista) (+ 1 pointsP1) 0 cont))
         ((equal? 2 (car lista))
-         (checkVerticalesAux (cdr lista) 0 (+ 1 pointsP2) (+ cont 1)))
+         (checkVerticalesAux (cdr lista) 0 (+ 1 pointsP2) cont))
   (else
-        (checkVerticalesAux (cdr lista) 0 0 (+ cont 1)))))
+        (checkVerticalesAux (cdr lista) 0 0 cont))))
 
 ;; Checks if someone is close to win by Rows.
 ;; Returns '(playerCloseToWin rowWhereItCanWin)
@@ -189,9 +193,9 @@
   (checkHorizontalesAux matrix 1 1 0 0))
 
 (define (checkHorizontalesAux matrix row column pointsP1 pointsP2)
-  (cond ((and (= pointsP1 3) (= 0 (getByIndexRow matrix row column 1)))
+  (cond ((and (= pointsP1 3) (= 0 (getByIndexRow matrix row column 1))  (< 0 (getByIndexRow matrix row (+ column 1) 1)))
          (list 1 row))
-        ((and (= pointsP2 3) (= 0 (getByIndexRow matrix row column 1)))
+        ((and (= pointsP2 3) (= 0 (getByIndexRow matrix row column 1))  (< 0 (getByIndexRow matrix row (+ column 1) 1)))
          (list 2 row))
         ((> column (length (car matrix)))
          '(0 0))
@@ -229,9 +233,9 @@
 ;; It checks the right and left diagonal of a specific matrix index.
 ;; Coeficient indicates if it has to check right (1) diagonal or left (-1) diagonal.
 (define (checkDiagonalesAux matrix row column pointsP1 pointsP2 coeficient result)
-  (cond ((and (= pointsP1 3) (= 0 (getByIndexRow matrix row column 1)))
+  (cond ((and (= pointsP1 3) (= 0 (getByIndexRow matrix row column 1)) (< 0 (getByIndexRow matrix ( + row 1) (+ column 1) 1)))
          (list 1 column row))
-        ((and (= pointsP2 3) (= 0 (getByIndexRow matrix row column 1)))
+        ((and (= pointsP2 3) (= 0 (getByIndexRow matrix row column 1)) (< 0 (getByIndexRow matrix ( + row 1) (+ column 1) 1)))
          (list 2 column row))
         ((or (< row 1) (< column 1))
          '(0 0))
@@ -244,15 +248,20 @@
    (else
          (checkDiagonalesAux matrix (+ row 1) (+ column coeficient) 0 0 coeficient result))))
 
+;; Checks if a column is full played.
+(define (fullColumn? lista)
+  (cond ((zero? (car lista))
+         #f)
+  (else
+         #t)))
 
 ;;  ---------- Exporting all -----------
 
 (provide (all-defined-out))
 
-(define x '((0 1 0 1 0)
-            (0 1 1 2 0)
-            (0 0 1 1 0)
-            (1 2 0 1 0)
+(define x '((1 0 0 0 0)
+            (0 1 0 0 0)
+            (0 0 1 0 0)
             (0 0 0 0 0)))
 
 (checkDiagonales x)
