@@ -50,7 +50,8 @@
 
 (define (insertCoinRow column player matrix)
   (cond
-    [(= column 1) (insertCoinRow_aux (car matrix) 1 player) ]
+    [(> column (length matrix)) (insertCoinRow (length matrix) player matrix)]
+    [(<= column 1) (insertCoinRow_aux (car matrix) 1 player) ]
     [else (insertCoinRow (- column 1) player (cdr matrix))]))
 
 

@@ -217,15 +217,18 @@
                                    (insertCoin column 1 (cadr buttonsMatrix))))
          (mainAux 2))
         ((= 2 playerOn)
-         ;(send (matrixGet (- totalRows (insertCoinRow column 1 (cadr buttonsMatrix))) (- totalColumns column ) 0 (car buttonsMatrix)) set-label coinGold)
-         (send (matrixGet  (- totalRows  (insertCoinRow column 1  oldMatrix))   (- totalColumns (- column 1))  0 (car buttonsMatrix)) set-label coinGold)
-         (mainAux 1))))
+         (cond ((= column 0)
+                (setChoseHole row (length (car oldMatrix)) totalRows totalColumns playerOn oldMatrix)
+                (mainAux 1))
+         (else
+               (send (matrixGet  (- totalRows  (insertCoinRow column 1  oldMatrix))   (- totalColumns  (- column 1))  0 (car buttonsMatrix)) set-label coinGold)
+               (mainAux 1))))))
 
 ;; Gets the button we want in the matrix.
 ;; param: rowButton, columnButton, cont = 1, listOfButtons
 ;; output: the button we are looking for.
 (define (matrixGet row column cont list)
-  (cond ((= row cont)
+  (cond ((<= row cont)
          (matrixGetAux row column 1 (car list)))
   (else
     (matrixGet row column (+ cont 1) (cdr list)))))
@@ -235,7 +238,7 @@
 ;; param: rowButton, columnButton, cont = 1, listOfButtons
 ;; output: the button we are looking for.
 (define (matrixGetAux row column cont list)
-  (cond ((= column cont)
+  (cond ((<= column cont)
          (car list))
   (else
     (matrixGetAux row column (+ cont 1) (cdr list)))))
@@ -250,7 +253,7 @@
                          (findDifferenceAux (car matrixA) (car matrixB) cont)))))
 
 (define (findDifferenceAux listA listB cont)
-  (cond ((null? listA) 0)
+  (cond ((null?  listA) 0)
         ((not (= (car listA) (car listB)))  cont)
   (else (findDifferenceAux (cdr listA) (cdr listB) cont))))
 
