@@ -183,9 +183,9 @@
                 (list 2 cont))
          (else
                 '(0 0))))
-        ((and (= pointsP1 3) (fullColumn? lista)) 
+        ((and (= pointsP1 3)) 
          (list 1 cont))
-        ((and (= pointsP2 3) (fullColumn? lista))
+        ((and (= pointsP2 3))
          (list 2 cont))          
         ((equal? 1 (car lista))
          (checkVerticalesAux (cdr lista) (+ 1 pointsP1) 0 cont))
@@ -268,7 +268,7 @@
 
 (provide (all-defined-out))
 
-(define x '((0 0 0 0 0)
+(define x '((0 2 2 2 0)
             (0 1 0 1 0)
             (1 1 1 1 2)
             (0 0 1 1 1)))
