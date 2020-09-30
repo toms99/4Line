@@ -75,7 +75,7 @@
     [(and (not (zero? (car (checkDiagonales matrix)))) (equal? (car (checkDiagonales matrix)) 2)) 
            (insertCoin (caddr (checkDiagonales matrix)) computer matrix)]
     [(and (not (zero? (cadr (checkHorizontales matrix)))) (equal? (car (checkHorizontales matrix)) 1)) 
-           (insertCoin (- (cadr (checkHorizontales matrix)) 1) computer matrix)]
+           (insertCoin (cadr (checkHorizontales matrix)) computer matrix)]
     [(and (not (zero? (cadr (checkVerticales matrix)))) (equal? (car (checkVerticales matrix)) 1)) 
            (insertCoin (cadr (checkVerticales matrix)) computer matrix)]
     [(and (not (zero? (car (checkDiagonales matrix)))) (equal? (car (checkDiagonales matrix)) 1)) 
@@ -96,6 +96,8 @@
 (define (checkHorizontalesAux matrix row column pointsP1 pointsP2)
   (cond ((and (= pointsP1 3) (= 0 (getByIndexRow matrix row column 1))  (not (= 0 (getByIndexRow matrix row (+ column 1) 1))))
          (list 1 row))
+        ((and (= pointsP1 3) (= 0 (getByIndexRow matrix (- row 4) column 1))  (not (= 0 (getByIndexRow matrix row (+ column 1) 1))))
+         (list 1 (- row 4)))
         ((and (= pointsP2 3) (= 0 (getByIndexRow matrix row column 1))  (not (= 0 (getByIndexRow matrix row (+ column 1) 1))))
          (list 2 row))
         ((> column (length (car matrix)))
@@ -233,29 +235,31 @@
 ;; Salida: Un string que anuncia al ganador
 
 (define (checkWinner matrix)
-  (checkRows matrix)
-  (checkColumns matrix)
-  (checkDiagonals matrix))
+  (cond ((< 0 (checkRows matrix 0)) (checkRows matrix 0))
+        ((< 0 (checkColumns matrix)) (checkColumns matrix))
+        ((< 0 (checkDiagonals matrix)) (checkDiagonals matrix))
+  (else 0)))
 
 
 ;; Verifica si algún jugador tiene 4 fichas en línea horizontalmente
 ;; Parametros: Una matriz
 ;; Salida: Un string que anuncia al ganador
 
-(define (checkRows matrix)
-  (cond ((null? matrix)
-         #f)
+(define (checkRows matrix result)
+  (cond ((< 0 result)
+         result)
+        ((null? matrix)
+         0)
   (else
-         (checkRowsAux (car matrix) 0 0)
-         (checkRows (cdr matrix)))))
+         (checkRows (cdr matrix) (checkRowsAux (car matrix) 0 0)))))
 
 (define (checkRowsAux list pointsP1 pointsP2)
   (cond ((= pointsP1 4) 
-         (print "Player 1 by rows"))
+         1)
         ((= pointsP2 4)
-         (print "Player 2 by rows"))
+         2)
         ((null? list)
-         #f)     
+         0)     
         ((equal? 1 (car list))
          (checkRowsAux (cdr list) (+ 1 pointsP1) 0))
         ((equal? 2 (car list))
@@ -273,11 +277,11 @@
 
 (define (checkColumnsAux matrix row column pointsP1 pointsP2)
   (cond ((= pointsP1 4)
-         (print "Player 1 by columns"))
+         1)
         ((= pointsP2 4)
-         (print "Player 2 by columns"))
+         2)
         ((> column (length (car matrix)))
-         #f)
+         0)
         ((> row (length matrix))
          (checkColumnsAux matrix 1 (+ column 1) 0 0))
         ((= 1 (getByIndexRow matrix row column 1))
@@ -289,10 +293,8 @@
 
 
 
-;; Obtiene el elemento de una matriz
-;; Parametros: Una matriz, número de columna, número de fila, contador que inicia en 1
-;; Salida: Elemento de la matriz
-
+;; A couple of functions that get the element in
+;; (row, column) index.
 (define (getByIndexRow matrix row column cont)
   (cond ((null?  matrix)
          -1)
@@ -309,16 +311,6 @@
   (else
          (getByIndexColumn (cdr list) column (+ cont 1)))))
 
-;; Verifica si existe un empate (todas las casillas llenas sin haber 4 fichas iguales seguidas)
-;; Parámetros: Una matriz
-;; Salida: Un string que anuncia empate
-
-(define (checkDraw matrix)
-  (cond
-    [(null? matrix) "Es un empate!!!"]
-    [(not (zero? (caar matrix))) (checkDraw (cdr matrix))]
-    [else "No es un empate (todavía)"]))
-
 ;; Verifica si algún jugador tiene 4 fichas en línea diagonalmente
 ;; Parametros: Una matriz
 ;; Salida: Un string que anuncia al ganador
@@ -328,7 +320,7 @@
 
 (define (selectDiagonalsToCheck matrix row column cont)
   (cond ((>= row (length matrix))
-         "Done")
+         0)
         ((>= column (length (car matrix)))
          (checkDiagonalsAux matrix row column 0 0 -1)
          (checkDiagonalsAux matrix row 1 0 0 1)
@@ -338,23 +330,20 @@
          (checkDiagonalsAux matrix row column 0 0 -1)
          (selectDiagonalsToCheck matrix row (+ column 1) (+ cont 1)))))
 
-;; Función auxiliar para checkDiagonal.
-;; Revisa la diagonal derecha e izquierda del índice específico de una matriz
-;; Parametros: Una matriz, número de fila, número de columna, número de repeticiones de la ficha del usuario,
-;;             número de repeticiones de la ficha de la computadora, un coeficiente que indica si se ha verificado la derecha de la diagonal (1) o la izquierda (-1)
-;; Salida: Un string que anuncia al ganador
+;; Auxiliary function for checkDiagonal.
+;; It checks the right and left diagonal of a specific matrix index.
 ;; Coeficient indicates if it has to check right (1) diagonal or left (-1) diagonal.
 (define (checkDiagonalsAux matrix row column pointsP1 pointsP2 coeficient)
   (cond ((or (< row 1) (< column 1))
-         #f)
+         0)
         ((= pointsP1 4)
-         (print "Player 1 by diagonal"))
+         1)
         ((= pointsP2 4)
-         (print "Player 2 by diagonal"))
+         2)
         ((> column (length (car matrix)))
-         #f)
+         0)
         ((> row (length matrix))
-         #f)
+         0)
         ((= 1 (getByIndexRow matrix row column 1))
          (checkDiagonalsAux matrix (+ row 1) (+ column coeficient) (+ pointsP1 1) 0 coeficient))
         ((= 2 (getByIndexRow matrix row column 1))
