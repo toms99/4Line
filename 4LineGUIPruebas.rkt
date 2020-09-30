@@ -28,10 +28,12 @@
                     (max-value 16)
                     (init-value 10)))
 
+(define gameLogo (make-object bitmap%
+               (build-path (current-directory) "sources" "4LineLogo.png")))
 
 ; Make a button in the frame
 (new button% [parent frame]
-             [label "NEW GAME"]
+             [label gameLogo]
              ; Callback procedure for a button click:
              [callback (lambda (button event)
                          (createBoardButtons (send columnSlider get-value) (send rowsSlider get-value))

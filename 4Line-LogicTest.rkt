@@ -166,19 +166,26 @@
   (checkVerticalesAux2 matrix '(0 0) 1))
 
 (define (checkVerticalesAux2 matrix result cont)
-  (cond ((or (= 1 (car result)) (= 2 (car result)))
+  (cond ((< 0 (car result))
          result)
         ((null? matrix)
          result)
+        ((fullColumn? (car matrix))
+         (checkVerticalesAux2 (cdr matrix) result (+ cont 1)))
   (else
          (checkVerticalesAux2 (cdr matrix) (checkVerticalesAux (car matrix) 0 0 cont) (+ cont 1)))))
 
 (define (checkVerticalesAux lista pointsP1 pointsP2 cont)
   (cond ((null? lista)
-         '(0 0))   
-        ((and (= pointsP1 3) (equal? 0 (car lista))  (fullColumn? lista)) 
+         (cond ((= pointsP1 3)
+                (list 1 cont))
+               ((= pointsP2 3) 
+                (list 2 cont))
+         (else
+                '(0 0))))
+        ((and (= pointsP1 3) (fullColumn? lista)) 
          (list 1 cont))
-        ((and (= pointsP2 3) (equal? 0 (car lista))  (fullColumn? lista))
+        ((and (= pointsP2 3) (fullColumn? lista))
          (list 2 cont))          
         ((equal? 1 (car lista))
          (checkVerticalesAux (cdr lista) (+ 1 pointsP1) 0 cont))
@@ -187,15 +194,23 @@
   (else
         (checkVerticalesAux (cdr lista) 0 0 cont))))
 
+;; Checks if a column is full played.
+(define (fullColumn? lista)
+  (cond ((zero? (car lista))
+         #f)
+  (else
+         #t)))
+
+
 ;; Checks if someone is close to win by Rows.
 ;; Returns '(playerCloseToWin rowWhereItCanWin)
 (define (checkHorizontales matrix)
   (checkHorizontalesAux matrix 1 1 0 0))
 
 (define (checkHorizontalesAux matrix row column pointsP1 pointsP2)
-  (cond ((and (= pointsP1 3) (= 0 (getByIndexRow matrix row column 1))  (< 0 (getByIndexRow matrix row (+ column 1) 1)))
+  (cond ((and (= pointsP1 3) (= 0 (getByIndexRow matrix row column 1))  (not (= 0 (getByIndexRow matrix row (+ column 1) 1))))
          (list 1 row))
-        ((and (= pointsP2 3) (= 0 (getByIndexRow matrix row column 1))  (< 0 (getByIndexRow matrix row (+ column 1) 1)))
+        ((and (= pointsP2 3) (= 0 (getByIndexRow matrix row column 1))  (not (= 0 (getByIndexRow matrix row (+ column 1) 1))))
          (list 2 row))
         ((> column (length (car matrix)))
          '(0 0))
@@ -233,9 +248,9 @@
 ;; It checks the right and left diagonal of a specific matrix index.
 ;; Coeficient indicates if it has to check right (1) diagonal or left (-1) diagonal.
 (define (checkDiagonalesAux matrix row column pointsP1 pointsP2 coeficient result)
-  (cond ((and (= pointsP1 3) (= 0 (getByIndexRow matrix row column 1)) (< 0 (getByIndexRow matrix ( + row 1) (+ column 1) 1)))
+  (cond ((and (= pointsP1 3) (= 0 (getByIndexRow matrix row column 1)) (not (= 0 (getByIndexRow matrix row (+ column 1) 1))))
          (list 1 column row))
-        ((and (= pointsP2 3) (= 0 (getByIndexRow matrix row column 1)) (< 0 (getByIndexRow matrix ( + row 1) (+ column 1) 1)))
+        ((and (= pointsP2 3) (= 0 (getByIndexRow matrix row column 1)) (not (= 0 (getByIndexRow matrix row (+ column 1) 1))))
          (list 2 column row))
         ((or (< row 1) (< column 1))
          '(0 0))
@@ -248,23 +263,17 @@
    (else
          (checkDiagonalesAux matrix (+ row 1) (+ column coeficient) 0 0 coeficient result))))
 
-;; Checks if a column is full played.
-(define (fullColumn? lista)
-  (cond ((zero? (car lista))
-         #f)
-  (else
-         #t)))
 
 ;;  ---------- Exporting all -----------
 
 (provide (all-defined-out))
 
-(define x '((1 0 0 0 0)
-            (0 1 0 0 0)
-            (0 0 1 0 0)
-            (0 0 0 0 0)))
+(define x '((0 0 0 0 0)
+            (0 1 0 1 0)
+            (1 1 1 1 2)
+            (0 0 1 1 1)))
 
-(checkDiagonales x)
+(checkVerticales x)
 
 
 
