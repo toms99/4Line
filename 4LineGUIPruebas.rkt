@@ -97,10 +97,38 @@
                          )]))
 
 ;; --------------------- Define a Winner window --------------
+; The image for winner.
+(define winnerImage (make-object bitmap%
+               (build-path (current-directory) "sources" "PCwinner.png")))
+
+; the image for looser.
+(define loserImage (make-object bitmap%
+               (build-path (current-directory) "sources" "PCWINNER.png")))
+
+
 (define (winnerWindow winner)
+  (winnerWindowAux winner (new frame%
+                   [label "Game Over"]
+                   [width 400]
+                   [height 400]) ))
+
+(define (winnerWindowAux winner parent)
   (enableButtons #f)
-  (cond((= 2 winner) (send gameFrame show #f))
-       ((= 1 winner) (send gameFrame show #f))))
+  (cond((= 2 winner)
+        (send gameFrame show #f)
+        (new button% [parent parent]
+               [label loserImage]
+               [callback (lambda (button event) 
+                         (send parent show #f)
+                         )]))
+       ((= 1 winner)
+        (send gameFrame show #f)
+        (new button% [parent parent]
+               [label winnerImage]
+               [callback (lambda (button event) 
+                         (send parent show #f)
+                         )])))
+  (send parent show #t))
 
 ;; Creates all the holeButtons inside board.
 ;; param: number of columns and rows.
