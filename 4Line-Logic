@@ -309,6 +309,16 @@
   (else
          (getByIndexColumn (cdr list) column (+ cont 1)))))
 
+;; Verifica si existe un empate (todas las casillas llenas sin haber 4 fichas iguales seguidas)
+;; Parámetros: Una matriz
+;; Salida: Un string que anuncia empate
+
+(define (checkDraw matrix)
+  (cond
+    [(null? matrix) "Es un empate!!!"]
+    [(not (zero? (caar matrix))) (checkDraw (cdr matrix))]
+    [else "No es un empate (todavía)"]))
+
 ;; Verifica si algún jugador tiene 4 fichas en línea diagonalmente
 ;; Parametros: Una matriz
 ;; Salida: Un string que anuncia al ganador
