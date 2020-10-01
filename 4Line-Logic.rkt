@@ -50,7 +50,7 @@
 
 (define (insertCoinRow column player matrix)
   (cond
-    [(> column (length matrix)) (insertCoinRow (length matrix) player matrix)]
+    [(> column (len matrix)) (insertCoinRow (len matrix) player matrix)]
     [(<= column 1) (insertCoinRow_aux (car matrix) 1 player)]
     [else (insertCoinRow (- column 1) player (cdr matrix))]))
 
@@ -85,7 +85,7 @@
            (list (checkHorizontal matrix) (insertCoin (checkHorizontal matrix) computer matrix))]
     [(not (zero? (checkVertical matrix)))
            (list (checkVertical matrix) (insertCoin (checkVertical matrix) computer matrix))]
-    [(list (+ (random (length matrix)) 1) (insertCoin (+ (random (length matrix)) 1) computer matrix))]))
+    [(list (+ (random (len matrix)) 1) (insertCoin (+ (random (len matrix)) 1) computer matrix))]))
 
 ;; Verifica si algún jugador está cerca de ganar horizontalmente
 ;; Parametros: Una matriz
@@ -103,9 +103,9 @@
          (list 2 row))
         ((and (= pointsP2 3) (= 0 (getByIndexRow matrix (- row 4) column 1))  (not (= 0 (getByIndexRow matrix row (+ column 1) 1))))
          (list 1 (- row 4)))
-        ((> column (length (car matrix)))
+        ((> column (len (car matrix)))
          '(0 0))
-        ((> row (length matrix))
+        ((> row (len matrix))
          (checkHorizontalesAux matrix 1 (+ column 1) 0 0))
         ((= 1 (getByIndexRow matrix row column 1))
          (checkHorizontalesAux matrix (+ row 1) column (+ pointsP1 1) 0))
@@ -123,9 +123,9 @@
 
 (define (checkHorizontalAux matrix column row)
   (cond 
-    [(> column (length matrix)) 
+    [(> column (len matrix)) 
      0]
-    [(> row (length (car matrix)))
+    [(> row (len (car matrix)))
      (checkHorizontalAux matrix (+ column 1) 1)]
     [(and (equal? 2 (getByIndexRow matrix column row 1)) (zero? (getByIndexRow matrix (+ column 1) row 1)) (not (zero? (getByIndexRow matrix (+ column 1) (+ row 1) 1))))
      (+ column 1)]
@@ -185,9 +185,9 @@
   
 (define (checkVerticalAux matrix column row)
   (cond 
-    [(> column (length matrix)) 
+    [(> column (len matrix)) 
      0]
-    [(> row (length (car matrix)))
+    [(> row (len (car matrix)))
      (checkVerticalAux matrix (+ column 1) 1)]
     [(and (equal? 2 (getByIndexRow matrix column row 1)) (not(zero? (getByIndexRow matrix column (- row 1) 1))))
      (checkVerticalAux matrix (+ column 1) 1)]
@@ -203,9 +203,9 @@
   (selectDiagonalesToCheck matrix 1 1 1 '(0 0)))
 
 (define (selectDiagonalesToCheck matrix row column cont result)
-  (cond ((or (< 0 (car result)) (> row (length matrix)))
+  (cond ((or (< 0 (car result)) (> row (len matrix)))
          result)
-        ((> column (length (car matrix)))
+        ((> column (len (car matrix)))
          (selectDiagonalesToCheck matrix (+ row 1) column (+ cont 1)
                                   (checkDiagonalesAux matrix row column 0 0 -1 result))
          (selectDiagonalesToCheck matrix (+ row 1) column (+ cont 1)
@@ -226,7 +226,7 @@
          (list 2 column row))
         ((or (< row 1) (< column 1))
          '(0 0))
-        ((or (> column (length (car matrix))) (> row (length matrix)))
+        ((or (> column (len (car matrix))) (> row (len matrix)))
          '(0 0))
         ((= 1 (getByIndexRow matrix row column 1))
          (checkDiagonalesAux matrix (+ row 1) (+ column coeficient) (+ pointsP1 1) 0 coeficient result))
@@ -289,9 +289,9 @@
          1)
         ((= pointsP2 4)
          2)
-        ((> column (length (car matrix)))
+        ((> column (len (car matrix)))
          0)
-        ((> row (length matrix))
+        ((> row (len matrix))
          (checkColumnsAux matrix 1 (+ column 1) 0 0))
         ((= 1 (getByIndexRow matrix row column 1))
          (checkColumnsAux matrix (+ row 1) column (+ pointsP1 1) 0))
@@ -333,9 +333,9 @@
 (define (selectDiagonalsToCheck matrix row column cont result coeficient)
   (cond ((> result 0)
          result)
-        ((>= row (length matrix))
+        ((>= row (len matrix))
          result)
-        ((>= column (length (car matrix)))
+        ((>= column (len (car matrix)))
          (selectDiagonalsToCheck matrix (+ row 1) column (+ cont 1)
                                  (checkDiagonalsAux matrix row column 0 0 coeficient)
                                  coeficient))
@@ -354,9 +354,9 @@
          1)
         ((= pointsP2 4)
          2)
-        ((> column (length (car matrix)))
+        ((> column (len (car matrix)))
          0)
-        ((> row (length matrix))
+        ((> row (len matrix))
          0)
         ((= 1 (getByIndexRow matrix row column 1))
          (checkDiagonalsAux matrix (+ row 1) (+ column coeficient) (+ pointsP1 1) 0 coeficient))
@@ -364,6 +364,17 @@
          (checkDiagonalsAux matrix (+ row 1) (+ column coeficient) 0 (+ pointsP2 1) coeficient))
    (else
          (checkDiagonalsAux matrix (+ row 1) (+ column coeficient) 0 0 coeficient))))
+         
+;; Returns the length of a list.
+;; param: list?
+;; output: length of the list.
+(define (len lista)
+  (lenAux lista 0))
+
+(define (lenAux lista cont)
+  (cond ((null? lista) cont)
+  (else
+         (lenAux (cdr lista) (+ cont 1)))))
 
 ;;  ---------- Exporting all -----------
 
