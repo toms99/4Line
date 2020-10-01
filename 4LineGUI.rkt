@@ -42,7 +42,7 @@
                          (createBoardButtons (send columnSlider get-value) (send rowsSlider get-value))
                          (send frame show #f)
                          (send gameFrame show #t)
-                         )])
+                         (mainAux 2))])
 
 ; Close button.
 (new button% [parent frame]
@@ -66,14 +66,6 @@
 ; Make a static text message in the frame
 (define msg (new message% [parent gameFrame]
                           [label "No events so far..."]))
-
-; Button to go back to MainWindow
-(new button% [parent gameFrame]
-             [label "Back to Menu"]
-             [callback (lambda (button event) 
-                         (send gameFrame show #f)
-                         (send frame show #t)
-                         )])
 
 
 ;; Creates the panel that manages all the holeButtons
