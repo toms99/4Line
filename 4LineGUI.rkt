@@ -238,7 +238,7 @@
          (mainAux 2))
         ((= 2 playerOn)
          (cond ((= column 0)
-                (setChoseHole row (length (car oldMatrix)) totalRows totalColumns playerOn oldMatrix)
+                (setChoseHole row (len (car oldMatrix)) totalRows totalColumns playerOn oldMatrix)
                 (mainAux 1))
          (else
                (send (matrixGet  (- totalRows  (insertCoinRow column 1  oldMatrix))   (- totalColumns  (- column 1))  0 (car buttonsMatrix)) set-label coinGold)
@@ -285,8 +285,8 @@
   (print (car matrixA))
   (print (findDifference (cadr matrixA) matrixB 1 0))
   (setChoseHole 1 (findDifference (cadr matrixA) matrixB 1 0 )
-                (length (car (cadr matrixA)))
-                (length (cadr matrixA))                
+                (len (car (cadr matrixA)))
+                (len (cadr matrixA))                
                 playerOn
                 matrixB)
   )
