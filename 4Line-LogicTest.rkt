@@ -239,7 +239,8 @@
 (define (checkWinner matrix)
   (cond ((< 0 (checkRows matrix 0)) (checkRows matrix 0))
         ((< 0 (checkColumns matrix)) (checkColumns matrix))
-        ((< 0 (checkDiagonals matrix)) (checkDiagonals matrix))
+        ((< 0 (checkDiagonals1 matrix)) (checkDiagonals1 matrix))
+        ((< 0 (checkDiagonals2 matrix)) (checkDiagonals2 matrix))
   (else 0)))
 
 
@@ -317,20 +318,25 @@
 ;; Parametros: Una matriz
 ;; Salida: Un string que anuncia al ganador
 
-(define (checkDiagonals matrix)
-  (selectDiagonalsToCheck matrix 1 1 1))
+(define (checkDiagonals1 matrix)
+  (selectDiagonalsToCheck matrix 1 1 1 0 1))
 
-(define (selectDiagonalsToCheck matrix row column cont)
-  (cond ((>= row (length matrix))
-         0)
+(define (checkDiagonals2 matrix)
+  (selectDiagonalsToCheck matrix 1 1 1 0 -1))
+
+(define (selectDiagonalsToCheck matrix row column cont result coeficient)
+  (cond ((> result 0)
+         result)
+        ((>= row (length matrix))
+         result)
         ((>= column (length (car matrix)))
-         (checkDiagonalsAux matrix row column 0 0 -1)
-         (checkDiagonalsAux matrix row 1 0 0 1)
-         (selectDiagonalsToCheck matrix (+ row 1) column (+ cont 1)))
+         (selectDiagonalsToCheck matrix (+ row 1) column (+ cont 1)
+                                 (checkDiagonalsAux matrix row column 0 0 coeficient)
+                                 coeficient))
   (else
-         (checkDiagonalsAux matrix row column 0 0 1)
-         (checkDiagonalsAux matrix row column 0 0 -1)
-         (selectDiagonalsToCheck matrix row (+ column 1) (+ cont 1)))))
+         (selectDiagonalsToCheck matrix row ( + column 1) (+ cont 1)
+                                 (checkDiagonalsAux matrix row column 0 0 coeficient)
+                                 coeficient))))
 
 ;; Auxiliary function for checkDiagonal.
 ;; It checks the right and left diagonal of a specific matrix index.
@@ -357,15 +363,13 @@
 
 (provide (all-defined-out))
 
-(define x '((0 1 2 2 2 1 2 1 2)
-            (0 1 0 1 0 1 2 1 2)
-            (1 1 2 1 1 2 2 1 2)
-            (0 0 1 1 1 1 2 1 2)
-            (0 0 1 1 1 1 2 1 2)
-            (0 0 1 1 1 1 2 1 2)
-            (0 0 1 1 1 1 2 1 2)))
+(define x '((0 1 0 0 2)
+            (0 0 0 0 2)
+            (0 0 1 2 2)
+            (0 2 2 0 2)
+            (0 2 0 0 0)))
 
-(checkDiagonales x)
+(checkWinner x )
 
 
 
