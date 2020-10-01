@@ -378,7 +378,7 @@
 
 ;; Verifica si existe un empate (todas las casillas llenas sin haber 4 fichas iguales seguidas)
 ;; Parámetros: Una matriz
-;; Salida: Un string que anuncia empate
+;; Salida: 3 si es empate y 0 si no lo es.
 
 (define (checkDraw matrix)
   (cond
