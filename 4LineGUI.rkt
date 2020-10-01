@@ -2,7 +2,7 @@
 ;; #lang racket/gui
 (require racket/gui/base)
 (require racket/include)
-(require "4Line-Logic")
+(require "4Line-Logic.rkt")
 
 
 ;; --------------- MainWindow ---------------

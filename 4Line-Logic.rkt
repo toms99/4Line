@@ -71,13 +71,13 @@
   (cond
     [(and (not (zero? (cadr (checkHorizontales matrix)))) (equal? (car (checkHorizontales matrix)) 2)) 
            (list (cadr (checkHorizontales matrix)) (insertCoin (cadr (checkHorizontales matrix)) computer matrix))]
-    [(and (not (zero? (cadr (checkVerticales matrix)))) (equal? (car (checkVerticales matrix)) 2)) 
+    [(and (not (zero? (checkVerticalAux matrix (cadr (checkVerticales matrix)) 1))) (equal? (car (checkVerticales matrix)) 2)) 
            (list (cadr (checkVerticales matrix)) (insertCoin (cadr (checkVerticales matrix)) computer matrix))]
     [(and (not (zero? (car (checkDiagonales matrix)))) (equal? (car (checkDiagonales matrix)) 2)) 
            (list (caddr (checkDiagonales matrix)) (insertCoin (caddr (checkDiagonales matrix)) computer matrix))]
     [(and (not (zero? (cadr (checkHorizontales matrix)))) (equal? (car (checkHorizontales matrix)) 1)) 
            (list (cadr (checkHorizontales matrix)) (insertCoin (cadr (checkHorizontales matrix)) computer matrix))]
-    [(and (not (zero? (cadr (checkVerticales matrix)))) (equal? (car (checkVerticales matrix)) 1)) 
+    [(and (not (zero? (checkVerticalAux matrix (cadr (checkVerticales matrix)) 1))) (equal? (car (checkVerticales matrix)) 1)) 
            (list (cadr (checkVerticales matrix)) (insertCoin (cadr (checkVerticales matrix)) computer matrix))]
     [(and (not (zero? (car (checkDiagonales matrix)))) (equal? (car (checkDiagonales matrix)) 1)) 
            (list (caddr (checkDiagonales matrix)) (insertCoin (caddr (checkDiagonales matrix)) computer matrix))]
@@ -179,7 +179,7 @@
 
 ;; Verifica si existe alguna ficha de la computadora con un espacio disponible verticalmente
 ;; Parametros: Una matriz y un contador que inicia en 1
-;; Salida: Numero de comlumna en la que se debe insertar la ficha si el espacio se encuentra disponible
+;; Salida: Numero de columna en la que se debe insertar la ficha si el espacio se encuentra disponible
 (define (checkVertical matrix)
   (checkVerticalAux matrix 1 1))
   
@@ -245,7 +245,8 @@
 (define (checkWinner matrix)
   (cond ((< 0 (checkRows matrix 0)) (checkRows matrix 0))
         ((< 0 (checkColumns matrix)) (checkColumns matrix))
-        ((< 0 (checkDiagonals matrix)) (checkDiagonals matrix))
+        ((< 0 (checkDiagonals1 matrix)) (checkDiagonals1 matrix))
+        ((< 0 (checkDiagonals2 matrix)) (checkDiagonals2 matrix))
   (else 0)))
 
 
@@ -323,20 +324,25 @@
 ;; Parametros: Una matriz
 ;; Salida: Un string que anuncia al ganador
 
-(define (checkDiagonals matrix)
-  (selectDiagonalsToCheck matrix 1 1 1))
+(define (checkDiagonals1 matrix)
+  (selectDiagonalsToCheck matrix 1 1 1 0 1))
 
-(define (selectDiagonalsToCheck matrix row column cont)
-  (cond ((>= row (length matrix))
-         0)
+(define (checkDiagonals2 matrix)
+  (selectDiagonalsToCheck matrix 1 1 1 0 -1))
+
+(define (selectDiagonalsToCheck matrix row column cont result coeficient)
+  (cond ((> result 0)
+         result)
+        ((>= row (length matrix))
+         result)
         ((>= column (length (car matrix)))
-         (checkDiagonalsAux matrix row column 0 0 -1)
-         (checkDiagonalsAux matrix row 1 0 0 1)
-         (selectDiagonalsToCheck matrix (+ row 1) column (+ cont 1)))
+         (selectDiagonalsToCheck matrix (+ row 1) column (+ cont 1)
+                                 (checkDiagonalsAux matrix row column 0 0 coeficient)
+                                 coeficient))
   (else
-         (checkDiagonalsAux matrix row column 0 0 1)
-         (checkDiagonalsAux matrix row column 0 0 -1)
-         (selectDiagonalsToCheck matrix row (+ column 1) (+ cont 1)))))
+         (selectDiagonalsToCheck matrix row ( + column 1) (+ cont 1)
+                                 (checkDiagonalsAux matrix row column 0 0 coeficient)
+                                 coeficient))))
 
 ;; Auxiliary function for checkDiagonal.
 ;; It checks the right and left diagonal of a specific matrix index.
