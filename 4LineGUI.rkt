@@ -96,6 +96,10 @@
 ; the image for looser.
 (define loserImage (make-object bitmap%
                (build-path (current-directory) "sources" "PCWINNER.png")))
+               
+; the image for a tie.
+(define tieImage (make-object bitmap%
+               (build-path (current-directory) "sources" "TIE.png")))
 
 
 (define (winnerWindow winner)
@@ -106,7 +110,15 @@
 
 (define (winnerWindowAux winner parent)
   (enableButtons #f)
-  (cond((= 2 winner)
+  (cond ((= 3 winner)
+        (send gameFrame show #f)
+        (new button% [parent parent]
+               [label tieImage]
+               [callback (lambda (button event) 
+                         (send parent show #f)
+                         )]))
+  
+       ((= 2 winner)
         (send gameFrame show #f)
         (new button% [parent parent]
                [label loserImage]
