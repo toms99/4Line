@@ -50,7 +50,8 @@
 
 (define (insertCoinRow column player matrix)
   (cond
-    [(= column 1) (insertCoinRow_aux (car matrix) 1 player) ]
+    [(> column (length matrix)) (insertCoinRow (length matrix) player matrix)]
+    [(<= column 1) (insertCoinRow_aux (car matrix) 1 player)]
     [else (insertCoinRow (- column 1) player (cdr matrix))]))
 
 
@@ -59,7 +60,6 @@
     [(null? (cdr selectedColumn)) row]
     [(not(zero? (cadr selectedColumn))) row]
     [else (insertCoinRow_aux (cdr selectedColumn) (+ row 1) player)]))
-
 
 ;; ----------------- Greedy Algorithm -------------------------
 
@@ -101,6 +101,8 @@
          (list 1 (- row 4)))
         ((and (= pointsP2 3) (= 0 (getByIndexRow matrix row column 1))  (not (= 0 (getByIndexRow matrix row (+ column 1) 1))))
          (list 2 row))
+        ((and (= pointsP2 3) (= 0 (getByIndexRow matrix (- row 4) column 1))  (not (= 0 (getByIndexRow matrix row (+ column 1) 1))))
+         (list 1 (- row 4)))
         ((> column (length (car matrix)))
          '(0 0))
         ((> row (length matrix))
@@ -112,6 +114,9 @@
    (else
          (checkHorizontalesAux matrix (+ row 1) column 0 0))))
 
+;; Encuentra una ficha de la computadora y verifica si se encuentra un espacio vacío horizontalmente
+;; Parámetros: Una matriz
+;; Salida: Indice de columna
 
 (define (checkHorizontal matrix)
   (checkHorizontalAux matrix 1 1))
@@ -122,8 +127,10 @@
      0]
     [(> row (length (car matrix)))
      (checkHorizontalAux matrix (+ column 1) 1)]
-    [(and (and (equal? 2 (getByIndexRow matrix column row 1)) (zero? (getByIndexRow matrix (+ column 1) row 1))) (not (zero? (getByIndexRow matrix (+ column 1) (+ row 1) 1))))
+    [(and (equal? 2 (getByIndexRow matrix column row 1)) (zero? (getByIndexRow matrix (+ column 1) row 1)) (not (zero? (getByIndexRow matrix (+ column 1) (+ row 1) 1))))
      (+ column 1)]
+    [(and (equal? 2 (getByIndexRow matrix column row 1)) (zero? (getByIndexRow matrix (- column 1) row 1)) (not (zero? (getByIndexRow matrix (- column 1) (+ row 1) 1))))
+     (- column 1)]
     [else (checkHorizontalAux matrix column (+ row 1))]))
 
 
@@ -352,8 +359,9 @@
    (else
          (checkDiagonalsAux matrix (+ row 1) (+ column coeficient) 0 0 coeficient))))
 
-(provide (all-defined-out))
+;;  ---------- Exporting all -----------
 
+(provide (all-defined-out))
 
 
 
