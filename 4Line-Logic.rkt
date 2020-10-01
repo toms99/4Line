@@ -376,6 +376,16 @@
   (else
          (lenAux (cdr lista) (+ cont 1)))))
 
+;; Verifica si existe un empate (todas las casillas llenas sin haber 4 fichas iguales seguidas)
+;; Parámetros: Una matriz
+;; Salida: Un string que anuncia empate
+
+(define (checkDraw matrix)
+  (cond
+    [(null? matrix) 3]
+    [(not (zero? (caar matrix))) (checkDraw (cdr matrix))]
+    [else 0]))
+
 ;;  ---------- Exporting all -----------
 
 (provide (all-defined-out))
